@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Thoughts</string>
+    <string name="facebook_app_id">256836544917927</string>
+    <string name="fb_login_protocol_scheme">fb256836544917927</string>
+    <array name="context_menu_items">
+        <item>Edit</item>
+        <item>Delete</item>
+        <item>Copy</item>
+    </array>
+</resources>
