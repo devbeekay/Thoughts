@@ -7,7 +7,7 @@ public class Thought implements Serializable {
 
     private Long id;
     private String thoughtText;
-    private Date timestamp;
+    private String timestamp;
     private String imgSource;
     private byte[] img;
 
@@ -30,11 +30,11 @@ public class Thought implements Serializable {
         this.thoughtText = thoughtText;
     }
 
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 

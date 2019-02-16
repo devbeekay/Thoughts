@@ -9,12 +9,22 @@
     <include android:id="@+id/toolbar_top"
         layout="@layout/toolbar"/>
 
+    <ImageView
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:id="@+id/add_img_preview"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar_top"
+        android:scaleType="fitXY"/>
+
     <EditText
         android:id="@+id/thoughtField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:ems="10"
+        android:maxLines="5"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         android:inputType="textMultiLine"/>

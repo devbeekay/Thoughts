@@ -1,12 +1,18 @@
 package com.beekay.thoughts;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.beekay.thoughts.adapter.ThoughtsAdapter;
@@ -23,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     ThoughtsAdapter adapter;
     List<Thought> thoughts;
     Utilities utilities;
+    SearchView sView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,15 +67,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        MenuInflater inflater = getMenuInflater();
-//        inflater.inflate(R.menu.migrate, menu);
-//        return true;
-//    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        sView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        sView.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
+        sView.setMaxWidth(Integer.MAX_VALUE);
+        sView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                adapter.getFilter().filter(query);
+                return false;
+            }
 
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                adapter.getFilter().filter(newText);
+                return false;
+            }
+        });
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
 //        List<Thought> thoughts = utilities.getThoughts();
 //        for (Thought thought : thoughts ) {
 //            if(thought.getImgSource() != null) {
@@ -88,6 +112,18 @@ public class MainActivity extends AppCompatActivity {
 //                }
 //            }
 //        }
-//        return false;
-//    }
+        if (item.getItemId() == R.id.action_search){
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!sView.isIconified()) {
+            sView.setIconified(true);
+            return;
+        }
+        super.onBackPressed();
+    }
 }

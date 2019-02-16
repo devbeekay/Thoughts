@@ -2,6 +2,8 @@ package com.beekay.thoughts;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -13,15 +15,18 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.beekay.thoughts.db.DataOpener;
 
+import java.io.File;
 import java.io.IOException;
 
 public class AddActivity extends AppCompatActivity {
 
     EditText thoughtField;
+    ImageView previewImage;
     ImageButton saveButton;
     String imgPath = "";
 
@@ -34,6 +39,7 @@ public class AddActivity extends AppCompatActivity {
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         thoughtField = findViewById(R.id.thoughtField);
+        previewImage = findViewById(R.id.add_img_preview);
         saveButton = findViewById(R.id.save);
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,7 +86,15 @@ public class AddActivity extends AppCompatActivity {
                     Toast.makeText(AddActivity.this, getPathFromUri(uri), Toast.LENGTH_SHORT).show();
                     String realPath = getPathFromUri(uri);
                     boolean found = false;
-                    imgPath = realPath;
+
+                    File img = new File(realPath);
+                    if(img.exists()) {
+                        imgPath = realPath;
+                        Bitmap selectedImg = BitmapFactory.decodeFile(imgPath);
+                        previewImage.setImageBitmap(selectedImg);
+                    } else {
+                        Toast.makeText(this, "Image Doesn't exist", Toast.LENGTH_LONG).show();
+                    }
                 }
             }
         }

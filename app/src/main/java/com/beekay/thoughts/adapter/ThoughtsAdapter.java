@@ -13,6 +13,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -24,20 +26,24 @@ import com.bumptech.glide.request.RequestOptions;
 import com.facebook.share.model.ShareLinkContent;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
-public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.ThoughtViewHolder> {
+public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.ThoughtViewHolder>
+    implements Filterable {
 
     List<Thought> thoughts;
     Context context;
     SimpleDateFormat sdf;
     boolean multiSelect = false;
     RequestOptions fitCenter;
+    List<Thought> filteredThoughts;
 
     public ThoughtsAdapter(List<Thought> thoughts, Context context){
         sdf = new SimpleDateFormat("yyyy-mm-dd HH:MM:SS");
         this.thoughts = thoughts;
         this.context = context;
+        this.filteredThoughts = thoughts;
         fitCenter = new RequestOptions().fitCenter();
     }
 
@@ -57,16 +63,9 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
     public void onBindViewHolder(ThoughtViewHolder holder, int position) {
         final Thought thought = thoughts.get(position);
         holder.thoughtView.setText(thought.getThoughtText());
-        holder.dateView.setText(sdf.format(thought.getTimestamp()));
+        holder.dateView.setText(thought.getTimestamp());
         holder.idView.setText(""+thought.getId());
         if(thought.getImg() != null){
-//            System.out.println(thoughts.get(position).getThoughtText());
-//            System.out.println(thoughts.get(position).getImg());
-//            File imgFile = new File(thought.getImageSource());
-//            if(imgFile.exists()){
-//                System.out.println("File Exists");
-//            Bitmap myBitMap = BitmapFactory.decodeByteArray(thought.getImg(),0,thought.getImg().length);
-//            holder.imgView.setImageBitmap(myBitMap);
             Glide.with(context)
                     .load(thought.getImg())
                     .apply(fitCenter)
@@ -97,6 +96,38 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
     public int getItemCount() {
         return thoughts.size();
     }
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                String query = constraint.toString();
+                if (query.isEmpty()){
+                    filteredThoughts = thoughts;
+                } else {
+                    List<Thought> fList = new ArrayList<>();
+                    for ( Thought t : thoughts ) {
+                        if (t.getThoughtText().toLowerCase().contains(query.toLowerCase())) {
+                            fList.add(t);
+                        }
+                    }
+                    filteredThoughts = fList;
+                }
+
+                FilterResults fResults = new FilterResults();
+                fResults.values = filteredThoughts;
+                return  fResults;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                filteredThoughts = (List<Thought>) results.values;
+                swap(filteredThoughts);
+            }
+        };
+    }
+
 
     class ThoughtViewHolder extends RecyclerView.ViewHolder{
 
