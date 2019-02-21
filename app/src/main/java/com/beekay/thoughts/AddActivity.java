@@ -19,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.beekay.thoughts.db.DataOpener;
+import com.beekay.thoughts.model.Thought;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class AddActivity extends AppCompatActivity {
     ImageView previewImage;
     ImageButton saveButton;
     String imgPath = "";
+    Thought thought = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +40,21 @@ public class AddActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Intent i = getIntent();
+        Bundle intentBundle = i.getExtras();
+        boolean editField = intentBundle.containsKey("Edit") ? intentBundle.getBoolean("Edit") : false;
+        if (editField){
+            getThought(intentBundle.getString("id"));
+        }
         thoughtField = findViewById(R.id.thoughtField);
         previewImage = findViewById(R.id.add_img_preview);
+        if (thought != null) {
+            thoughtField.setText(thought.getThoughtText());
+            if (thought.getImg() != null) {
+                Bitmap myBitMap = BitmapFactory.decodeByteArray(thought.getImg(),0,thought.getImg().length);
+                previewImage.setImageBitmap(myBitMap);
+            }
+        }
         saveButton = findViewById(R.id.save);
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,7 +65,11 @@ public class AddActivity extends AppCompatActivity {
                     DataOpener db = new DataOpener(AddActivity.this);
                     db.open();
                     try {
-                        db.insert(thoughtField.getText().toString(), imgPath);
+                        if (thought != null) {
+                            db.update(String.valueOf(thought.getId()), thoughtField.getText().toString(), imgPath);
+                        } else {
+                            db.insert(thoughtField.getText().toString(), imgPath);
+                        }
                     } catch (IOException ex) {
                         Toast.makeText(AddActivity.this, "Could not be inserted", Toast.LENGTH_LONG).show();
                     }
@@ -116,5 +135,20 @@ public class AddActivity extends AppCompatActivity {
         }
         cursor.close();
         return res;
+    }
+
+    private Thought getThought(String id) {
+        DataOpener db = new DataOpener(this);
+        db.open();
+        Cursor cursor = db.retrieveById(id);
+        while (cursor.moveToNext()) {
+            thought = new Thought();
+            thought.setId(Long.valueOf(cursor.getString(cursor.getColumnIndex("id"))));
+            thought.setThoughtText(cursor.getString(cursor.getColumnIndex("thought_text")));
+            thought.setImgSource(cursor.getString(cursor.getColumnIndex("image_src")));
+            thought.setImg(cursor.getBlob(cursor.getColumnIndex("image")));
+            break;
+        }
+        return thought;
     }
 }

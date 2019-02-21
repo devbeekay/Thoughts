@@ -1,5 +1,6 @@
 package com.beekay.thoughts.adapter;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -18,14 +19,16 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.beekay.thoughts.AddActivity;
 import com.beekay.thoughts.R;
 import com.beekay.thoughts.ViewActivity;
+import com.beekay.thoughts.db.DataOpener;
 import com.beekay.thoughts.model.Thought;
+import com.beekay.thoughts.util.Utilities;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.facebook.share.model.ShareLinkContent;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,17 +37,18 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
 
     List<Thought> thoughts;
     Context context;
-    SimpleDateFormat sdf;
-    boolean multiSelect = false;
     RequestOptions fitCenter;
-    List<Thought> filteredThoughts;
+    List<Thought> filteredThoughts = new ArrayList<>();
+    List<Thought> oldThoughts = new ArrayList<>();
+    Utilities utilities;
 
     public ThoughtsAdapter(List<Thought> thoughts, Context context){
-        sdf = new SimpleDateFormat("yyyy-mm-dd HH:MM:SS");
         this.thoughts = thoughts;
         this.context = context;
-        this.filteredThoughts = thoughts;
+        this.filteredThoughts.addAll(thoughts);
+        this.oldThoughts.addAll(thoughts);
         fitCenter = new RequestOptions().fitCenter();
+        utilities = new Utilities(context);
     }
 
     public void swap(List<Thought> thoughts){
@@ -80,7 +84,6 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
 //            holder.shareButton.setShareContent(content);
 //            }
         }else{
-//            System.out.println("File doesn't Exists");
             holder.imgView.setVisibility(View.GONE);
             ShareLinkContent content = new ShareLinkContent.Builder()
                     .setContentUrl(Uri.parse("www.google.com"))
@@ -104,15 +107,17 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
             protected FilterResults performFiltering(CharSequence constraint) {
                 String query = constraint.toString();
                 if (query.isEmpty()){
-                    filteredThoughts = thoughts;
+                    filteredThoughts.clear();
+                    filteredThoughts.addAll(oldThoughts);
                 } else {
                     List<Thought> fList = new ArrayList<>();
-                    for ( Thought t : thoughts ) {
+                    for ( Thought t : oldThoughts ) {
                         if (t.getThoughtText().toLowerCase().contains(query.toLowerCase())) {
                             fList.add(t);
                         }
                     }
-                    filteredThoughts = fList;
+                    filteredThoughts.clear();
+                    filteredThoughts.addAll(fList);
                 }
 
                 FilterResults fResults = new FilterResults();
@@ -141,6 +146,7 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
             super(itemView);
 
             thoughtView = itemView.findViewById(R.id.thought);
+//            thoughtView.setMovementMethod(LinkMovementMethod.getInstance());
             dateView = itemView.findViewById(R.id.timestamp);
             imgView = itemView.findViewById(R.id.img);
             idView = itemView.findViewById(R.id.idField);
@@ -165,7 +171,6 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
             itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    System.out.println("long clicked " + thoughtView.getText());
                     ((AppCompatActivity)v.getContext() ).startSupportActionMode(new ContextualCallBack(ThoughtViewHolder.this));
                     return true;
                 }
@@ -184,6 +189,7 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             menu.add("Delete");
+            menu.add("Edit");
             menu.add("Copy");
             return true;
         }
@@ -200,6 +206,22 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
                 ClipData clip = ClipData.newPlainText("Thought", viewHolder.thoughtView.getText().toString() +
                                                         " Created at " + viewHolder.dateView.getText().toString());
                 clipboardManager.setPrimaryClip(clip);
+                mode.finish();
+            }
+            if (item.getTitle().equals("Delete")) {
+                DataOpener db = new DataOpener(context);
+                db.open();
+                db.delete(viewHolder.idView.getText().toString());
+                db.close();
+                thoughts = utilities.getThoughts();
+                notifyDataSetChanged();
+                mode.finish();
+            }
+            if (item.getTitle().equals("Edit")) {
+                Intent intent = new Intent(context, AddActivity.class);
+                intent.putExtra("Edit", true);
+                intent.putExtra("id", viewHolder.idView.getText().toString());
+                ((Activity)context).startActivityForResult(intent,100);
                 mode.finish();
             }
             return false;

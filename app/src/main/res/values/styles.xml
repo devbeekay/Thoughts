@@ -7,6 +7,13 @@
         <item name="android:windowLightStatusBar" tools:ignore="NewApi">true</item>
         <!-- Customize your theme here. -->
         <item name="windowActionModeOverlay">true</item>
+
+        <item name="searchViewStyle">@style/DropDownLessSearchView</item>
+    </style>
+
+    <style name="DropDownLessSearchView" parent="Widget.AppCompat.SearchView">
+        <item name="android:dropDownAnchor">@layout/empty</item>
+        <item name="android:dropDownHeight">2dp</item>
     </style>
 
 </resources>

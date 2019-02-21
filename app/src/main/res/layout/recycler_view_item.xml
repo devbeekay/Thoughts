@@ -24,6 +24,7 @@
         android:padding="10dp"
         android:fontFamily="@font/roboto_semibold"
         android:maxLines="5"
+        android:autoLink="web"
         android:ellipsize="end"/>
     <TextView
         android:layout_width="wrap_content"

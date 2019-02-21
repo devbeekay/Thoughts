@@ -8,12 +8,12 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.SearchView;
 
 import com.beekay.thoughts.adapter.ThoughtsAdapter;
 import com.beekay.thoughts.model.Thought;
@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, AddActivity.class);
+                intent.putExtra("Edit", false);
                 startActivityForResult(intent,1);
             }
         });
@@ -73,12 +74,18 @@ public class MainActivity extends AppCompatActivity {
         inflater.inflate(R.menu.menu_main, menu);
         SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         sView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        sView.setSuggestionsAdapter(null);
+//        SearchView.SearchAutoComplete sView.findViewById(R.id.search_src_text);
         sView.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
         sView.setMaxWidth(Integer.MAX_VALUE);
+        sView.setElevation(20.0f);
+
+        sView.setQueryHint("Search here");
         sView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 adapter.getFilter().filter(query);
+                sView.clearFocus();
                 return false;
             }
 

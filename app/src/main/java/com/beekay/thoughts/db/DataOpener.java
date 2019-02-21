@@ -56,6 +56,33 @@ public class DataOpener {
         return db.query(TABLE_NAME,new String[]{ID, TIMESTAMP, THOUGHT_TEXT, IMG_SRC, IMG},null, null, null, null, "timestamp desc");
     }
 
+    public Cursor retrieveById(String id) {
+        return db.query(TABLE_NAME, new String[]{},ID+"=?",new String[]{id}, null, null, "1");
+    }
+
+    public void delete(String id) {
+        db.delete(TABLE_NAME,ID+"=?",new String[]{id});
+    }
+
+    public void update(String id, String thought, String imgSrc) throws IOException {
+        ContentValues values = new ContentValues();
+        values.put(THOUGHT_TEXT, thought);
+        values.put(IMG_SRC,imgSrc);
+        db.update(TABLE_NAME,values, ID+"=?", new String[] {id});
+        if (imgSrc!=null && imgSrc.trim().length()>0){
+            File imgFile = new File(imgSrc);
+            if(imgFile.exists()) {
+                BitmapFactory.Options options = new BitmapFactory.Options();
+//                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                Bitmap img = BitmapFactory.decodeFile(imgSrc);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                img.compress(Bitmap.CompressFormat.PNG, 0, stream);
+                insertImage(String.valueOf(id), stream.toByteArray());
+                stream.close();
+            }
+        }
+    }
+
     public long insert(String thought, String imgSrc) throws IOException {
         ContentValues values = new ContentValues();
         values.put(THOUGHT_TEXT, thought);
