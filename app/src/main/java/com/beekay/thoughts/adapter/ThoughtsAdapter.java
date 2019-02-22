@@ -41,14 +41,16 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
     List<Thought> filteredThoughts = new ArrayList<>();
     List<Thought> oldThoughts = new ArrayList<>();
     Utilities utilities;
+    boolean nightMode;
 
-    public ThoughtsAdapter(List<Thought> thoughts, Context context){
+    public ThoughtsAdapter(List<Thought> thoughts, Context context, boolean nightMode) {
         this.thoughts = thoughts;
         this.context = context;
         this.filteredThoughts.addAll(thoughts);
         this.oldThoughts.addAll(thoughts);
         fitCenter = new RequestOptions().fitCenter();
         utilities = new Utilities(context);
+        this.nightMode = nightMode;
     }
 
     public void swap(List<Thought> thoughts){
@@ -163,6 +165,7 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
                         }
                     }
                     Intent intent = new Intent(context, ViewActivity.class);
+                    intent.putExtra("Mode", nightMode);
                     intent.putExtra("thoughtSelected", selectedThought);
                     context.startActivity(intent);
                 }
@@ -220,6 +223,7 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
             if (item.getTitle().equals("Edit")) {
                 Intent intent = new Intent(context, AddActivity.class);
                 intent.putExtra("Edit", true);
+                intent.putExtra("Mode", nightMode);
                 intent.putExtra("id", viewHolder.idView.getText().toString());
                 ((Activity)context).startActivityForResult(intent,100);
                 mode.finish();

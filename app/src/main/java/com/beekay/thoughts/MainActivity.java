@@ -3,9 +3,11 @@ package com.beekay.thoughts;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -22,6 +24,9 @@ import com.facebook.FacebookSdk;
 
 import java.util.List;
 
+import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
+import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_YES;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,19 +36,36 @@ public class MainActivity extends AppCompatActivity {
     Utilities utilities;
     SearchView sView;
 
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
+
+    boolean nightMode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
-
         setContentView(R.layout.activity_main);
+
+        // Get night mode settings and apply them
+        setMode();
+
         utilities = new Utilities(this);
-        Toolbar toolbar = findViewById(R.id.toolbar_top);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+
+        //Changes related to night mode. Make toolbar dark and remove status bar settings via setSystemUiVisibility(0)
+        if (nightMode) {
+            toolbar.setBackgroundColor(getResources().getColor(R.color.cardview_dark_background));
+            getWindow().setStatusBarColor(getResources().getColor(R.color.cardview_dark_background));
+            getWindow().getDecorView().setSystemUiVisibility(0);
+        }
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
+
         recyclerView = findViewById(R.id.recycle);
         thoughts = utilities.getThoughts();
-        adapter = new ThoughtsAdapter(thoughts,this);
+        adapter = new ThoughtsAdapter(thoughts,this, nightMode);
         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         recyclerView.setAdapter(adapter);
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -52,11 +74,29 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, AddActivity.class);
                 intent.putExtra("Edit", false);
+                intent.putExtra("Mode", nightMode);
                 startActivityForResult(intent,1);
             }
         });
     }
 
+    private void setMode() {
+        sharedPreferences = getSharedPreferences("modePreference", Context.MODE_PRIVATE);
+        if (sharedPreferences.contains("night_mode")) {
+            nightMode = sharedPreferences.getBoolean("night_mode", false);
+            if (nightMode) {
+                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES);
+            } else {
+                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO);
+            }
+        } else {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("night_mode", false);
+            nightMode = false;
+            editor.commit();
+            AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO);
+        }
+    }
 
 
     @Override
@@ -67,6 +107,16 @@ public class MainActivity extends AppCompatActivity {
         adapter.swap(thoughts);
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem item = menu.findItem(R.id.action_night_mode);
+        if (nightMode) {
+            item.setTitle("Disable Night Mode");
+        } else {
+            item.setTitle("Enable Night Mode");
+        }
+        return true;
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -121,6 +171,19 @@ public class MainActivity extends AppCompatActivity {
 //        }
         if (item.getItemId() == R.id.action_search){
             return true;
+        }
+        if ( item.getItemId() == R.id.action_night_mode) {
+            if (nightMode) {
+                nightMode = false;
+                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO);
+            } else {
+                nightMode = true;
+                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES);
+            }
+            editor = sharedPreferences.edit();
+            editor.putBoolean("night_mode", nightMode);
+            editor.commit();
+            this.recreate();
         }
         return super.onOptionsItemSelected(item);
     }

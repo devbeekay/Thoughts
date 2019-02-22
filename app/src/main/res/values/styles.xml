@@ -1,19 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimary</item>
         <item name="android:windowLightStatusBar" tools:ignore="NewApi">true</item>
         <!-- Customize your theme here. -->
         <item name="windowActionModeOverlay">true</item>
-
-        <item name="searchViewStyle">@style/DropDownLessSearchView</item>
-    </style>
-
-    <style name="DropDownLessSearchView" parent="Widget.AppCompat.SearchView">
-        <item name="android:dropDownAnchor">@layout/empty</item>
-        <item name="android:dropDownHeight">2dp</item>
     </style>
 
 </resources>

@@ -36,16 +36,27 @@ public class AddActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
-        Toolbar toolbar = findViewById(R.id.toolbar_top);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         Intent i = getIntent();
         Bundle intentBundle = i.getExtras();
         boolean editField = intentBundle.containsKey("Edit") ? intentBundle.getBoolean("Edit") : false;
         if (editField){
             getThought(intentBundle.getString("id"));
         }
+        // Get night mode option via intent
+        boolean nightMode = intentBundle.containsKey("Mode") ? intentBundle.getBoolean("Mode") : false;
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        //Changes Related to night mode
+        if (nightMode) {
+            toolbar.setBackgroundColor(getResources().getColor(R.color.cardview_dark_background));
+            getWindow().setStatusBarColor(getResources().getColor(R.color.cardview_dark_background));
+            getWindow().getDecorView().setSystemUiVisibility(0);
+        }
+
+
         thoughtField = findViewById(R.id.thoughtField);
         previewImage = findViewById(R.id.add_img_preview);
         if (thought != null) {

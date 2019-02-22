@@ -19,10 +19,17 @@ public class ViewActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view);
-        Toolbar toolbar = findViewById(R.id.toolbar_top);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        //Changes Related to Night mode
+        if (getIntent().getBooleanExtra("Mode", false)) {
+            toolbar.setBackgroundColor(getResources().getColor(R.color.cardview_dark_background));
+            getWindow().setStatusBarColor(getResources().getColor(R.color.cardview_dark_background));
+            getWindow().getDecorView().setSystemUiVisibility(0);
+        }
         totalImageView = findViewById(R.id.totalImage);
         totalThoughtView = findViewById(R.id.totalThought);
         Thought thought = (Thought) getIntent().getSerializableExtra("thoughtSelected");
