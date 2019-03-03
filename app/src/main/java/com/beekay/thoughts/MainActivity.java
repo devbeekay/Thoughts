@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
@@ -15,13 +16,23 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
+import android.widget.Button;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import com.beekay.thoughts.adapter.ThoughtsAdapter;
 import com.beekay.thoughts.model.Thought;
 import com.beekay.thoughts.util.Utilities;
 import com.facebook.FacebookSdk;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.List;
 
 import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
@@ -40,44 +51,103 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences.Editor editor;
 
     boolean nightMode;
+    boolean secondaryFab = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FacebookSdk.sdkInitialize(getApplicationContext());
-        setContentView(R.layout.activity_main);
+        try {
 
-        // Get night mode settings and apply them
-        setMode();
+            FacebookSdk.sdkInitialize(getApplicationContext());
+            setContentView(R.layout.activity_main);
 
-        utilities = new Utilities(this);
+            // Get night mode settings and apply them
+            setMode();
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+            utilities = new Utilities(this);
 
-        //Changes related to night mode. Make toolbar dark and remove status bar settings via setSystemUiVisibility(0)
-        if (nightMode) {
-            toolbar.setBackgroundColor(getResources().getColor(R.color.cardview_dark_background));
-            getWindow().setStatusBarColor(getResources().getColor(R.color.cardview_dark_background));
-            getWindow().getDecorView().setSystemUiVisibility(0);
-        }
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("");
+            Toolbar toolbar = findViewById(R.id.toolbar);
 
-        recyclerView = findViewById(R.id.recycle);
-        thoughts = utilities.getThoughts();
-        adapter = new ThoughtsAdapter(thoughts,this, nightMode);
-        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-        recyclerView.setAdapter(adapter);
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, AddActivity.class);
-                intent.putExtra("Edit", false);
-                intent.putExtra("Mode", nightMode);
-                startActivityForResult(intent,1);
+            //Changes related to night mode. Make toolbar dark and remove status bar settings via setSystemUiVisibility(0)
+            if (nightMode) {
+                toolbar.setBackgroundColor(getResources().getColor(R.color.cardview_dark_background));
+                getWindow().setStatusBarColor(getResources().getColor(R.color.cardview_dark_background));
+                getWindow().getDecorView().setSystemUiVisibility(0);
             }
-        });
+            setSupportActionBar(toolbar);
+            getSupportActionBar().setTitle("");
+
+            recyclerView = findViewById(R.id.recycle);
+            thoughts = utilities.getThoughts();
+            adapter = new ThoughtsAdapter(thoughts, this, nightMode);
+            recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+            recyclerView.setAdapter(adapter);
+            final FloatingActionButton fab = findViewById(R.id.fab_thought);
+            final FloatingActionButton fabReminder = findViewById(R.id.fab_reminder);
+            fabReminder.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(MainActivity.this,"Clicked Secondary FAB", Toast.LENGTH_LONG).show();
+                }
+            });
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(secondaryFab) {
+                        secondaryFab = false;
+                        fabReminder.setVisibility(View.GONE);
+                        RotateAnimation rotate = new RotateAnimation(45f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                        rotate.setFillAfter(true);
+                        fab.startAnimation(rotate);
+                        Intent intent = new Intent(MainActivity.this, AddActivity.class);
+                        intent.putExtra("Edit", false);
+                        intent.putExtra("Mode", nightMode);
+                        startActivityForResult(intent, 1);
+                    } else {
+                        RotateAnimation rotate = new RotateAnimation(0f, 45f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                        rotate.setFillAfter(true);
+                        fab.startAnimation(rotate);
+                        fabReminder.setVisibility(View.VISIBLE);
+                        secondaryFab = true;
+                    }
+                }
+            });
+//            throw new Exception("something");
+        }catch (Exception ex) {
+            //fallback export db save your ass\
+            ex.printStackTrace();
+            setContentView(R.layout.fallback);
+            Button export = findViewById(R.id.exportDB);
+            export.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        File download_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                        File data = Environment.getDataDirectory();
+
+                        if (download_folder.canWrite()) {
+                            String currentDBPath = "//data//" + getPackageName() + "//databases//" + "thoughts.db";
+                            String backupDBPath = "thoughts.db";
+                            File currentDB = new File(data, currentDBPath);
+                            File backupDB = new File(download_folder, backupDBPath);
+
+                            if (currentDB.exists()) {
+                                FileChannel src = new FileInputStream(currentDB).getChannel();
+                                FileChannel dst = new FileOutputStream(backupDB).getChannel();
+                                dst.transferFrom(src, 0, src.size());
+                                src.close();
+                                dst.close();
+                            }
+                        }
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            });
+        }
     }
 
     private void setMode() {
@@ -171,8 +241,7 @@ public class MainActivity extends AppCompatActivity {
 //        }
         if (item.getItemId() == R.id.action_search){
             return true;
-        }
-        if ( item.getItemId() == R.id.action_night_mode) {
+        }else if ( item.getItemId() == R.id.action_night_mode) {
             if (nightMode) {
                 nightMode = false;
                 AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO);
@@ -184,6 +253,10 @@ public class MainActivity extends AppCompatActivity {
             editor.putBoolean("night_mode", nightMode);
             editor.commit();
             this.recreate();
+        } else if (item.getItemId() == R.id.action_starred) {
+            Intent intent = new Intent(MainActivity.this, StarredActivity.class);
+            intent.putExtra("Mode", nightMode);
+            startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }

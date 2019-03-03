@@ -9,11 +9,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.beekay.thoughts.model.Thought;
+import com.beekay.thoughts.util.Utilities;
 
 public class ViewActivity extends AppCompatActivity {
 
     TextView totalThoughtView;
     ImageView totalImageView;
+    Thought thought;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,11 +34,15 @@ public class ViewActivity extends AppCompatActivity {
         }
         totalImageView = findViewById(R.id.totalImage);
         totalThoughtView = findViewById(R.id.totalThought);
-        Thought thought = (Thought) getIntent().getSerializableExtra("thoughtSelected");
-        totalThoughtView.setText(thought.getThoughtText());
-        if ( thought.getImg() != null ) {
-            Bitmap myBitMap = BitmapFactory.decodeByteArray(thought.getImg(),0,thought.getImg().length);
-            totalImageView.setImageBitmap(myBitMap);
+        Long selectedId = (Long) getIntent().getSerializableExtra("thoughtSelected");
+        Utilities utilities = new Utilities(this);
+        thought = utilities.getThought(String.valueOf(selectedId));
+        if(thought != null) {
+            totalThoughtView.setText(thought.getThoughtText());
+            if (thought.getImg() != null) {
+                Bitmap myBitMap = BitmapFactory.decodeByteArray(thought.getImg(), 0, thought.getImg().length);
+                totalImageView.setImageBitmap(myBitMap);
+            }
         }
     }
 }

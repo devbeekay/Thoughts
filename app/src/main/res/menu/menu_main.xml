@@ -11,6 +11,12 @@
         app:actionViewClass="android.widget.SearchView" />
 
     <item
+        android:id="@+id/action_starred"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        android:title="Starred Thoughts" />
+
+    <item
         android:id="@+id/action_night_mode"
         android:orderInCategory="100"
         app:showAsAction="never"

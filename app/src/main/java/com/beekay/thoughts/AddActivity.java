@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.beekay.thoughts.db.DataOpener;
 import com.beekay.thoughts.model.Thought;
+import com.beekay.thoughts.util.Utilities;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,14 +37,16 @@ public class AddActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
+
         Intent i = getIntent();
         Bundle intentBundle = i.getExtras();
-        boolean editField = intentBundle.containsKey("Edit") ? intentBundle.getBoolean("Edit") : false;
+        boolean editField = intentBundle.containsKey("Edit") && intentBundle.getBoolean("Edit");
         if (editField){
-            getThought(intentBundle.getString("id"));
+            Utilities utilities = new Utilities(this);
+            thought = utilities.getThought(intentBundle.getString("id"));
         }
         // Get night mode option via intent
-        boolean nightMode = intentBundle.containsKey("Mode") ? intentBundle.getBoolean("Mode") : false;
+        boolean nightMode = intentBundle.containsKey("Mode") && intentBundle.getBoolean("Mode");
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("");
@@ -148,18 +151,4 @@ public class AddActivity extends AppCompatActivity {
         return res;
     }
 
-    private Thought getThought(String id) {
-        DataOpener db = new DataOpener(this);
-        db.open();
-        Cursor cursor = db.retrieveById(id);
-        while (cursor.moveToNext()) {
-            thought = new Thought();
-            thought.setId(Long.valueOf(cursor.getString(cursor.getColumnIndex("id"))));
-            thought.setThoughtText(cursor.getString(cursor.getColumnIndex("thought_text")));
-            thought.setImgSource(cursor.getString(cursor.getColumnIndex("image_src")));
-            thought.setImg(cursor.getBlob(cursor.getColumnIndex("image")));
-            break;
-        }
-        return thought;
-    }
 }

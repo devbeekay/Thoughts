@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -24,8 +25,8 @@ import com.beekay.thoughts.R;
 import com.beekay.thoughts.ViewActivity;
 import com.beekay.thoughts.db.DataOpener;
 import com.beekay.thoughts.model.Thought;
+import com.beekay.thoughts.util.GlideApp;
 import com.beekay.thoughts.util.Utilities;
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.facebook.share.model.ShareLinkContent;
 
@@ -37,9 +38,9 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
 
     List<Thought> thoughts;
     Context context;
-    RequestOptions fitCenter;
     List<Thought> filteredThoughts = new ArrayList<>();
     List<Thought> oldThoughts = new ArrayList<>();
+    RequestOptions glideOptions;
     Utilities utilities;
     boolean nightMode;
 
@@ -48,7 +49,13 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
         this.context = context;
         this.filteredThoughts.addAll(thoughts);
         this.oldThoughts.addAll(thoughts);
-        fitCenter = new RequestOptions().fitCenter();
+        glideOptions = new RequestOptions();
+        glideOptions.fitCenter();
+//        CircularProgressDrawable placeHolder = new CircularProgressDrawable(context);
+//        placeHolder.setStrokeWidth(5f);
+//        placeHolder.setCenterRadius(30f);
+//        placeHolder.start();
+//        glideOptions.placeholder(placeHolder);
         utilities = new Utilities(context);
         this.nightMode = nightMode;
     }
@@ -71,10 +78,18 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
         holder.thoughtView.setText(thought.getThoughtText());
         holder.dateView.setText(thought.getTimestamp());
         holder.idView.setText(""+thought.getId());
+        holder.starView.setImageDrawable(thought.isStarred() ?
+                context.getResources().getDrawable(R.drawable.ic_star):
+                nightMode ? context.getResources().getDrawable(R.drawable.ic_star_border) :
+                context.getResources().getDrawable(R.drawable.ic_star_border_black));
         if(thought.getImg() != null){
-            Glide.with(context)
+//            Glide.with(context)
+//                    .load(thought.getImg())
+//                    .apply(glideOptions)
+//                    .into(holder.imgView);
+
+            GlideApp.with(context)
                     .load(thought.getImg())
-                    .apply(fitCenter)
                     .into(holder.imgView);
 //            SharePhoto photo = new SharePhoto.Builder()
 //                    .setBitmap(myBitMap)
@@ -142,31 +157,47 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
         TextView dateView;
         ImageView imgView;
         TextView idView;
-//        ShareButton shareButton;
+        ImageButton starView;
 
         public ThoughtViewHolder(View itemView) {
             super(itemView);
 
             thoughtView = itemView.findViewById(R.id.thought);
-//            thoughtView.setMovementMethod(LinkMovementMethod.getInstance());
             dateView = itemView.findViewById(R.id.timestamp);
             imgView = itemView.findViewById(R.id.img);
             idView = itemView.findViewById(R.id.idField);
-//            shareButton = itemView.findViewById(R.id.share);
+            starView = itemView.findViewById(R.id.star);
+            starView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String id = idView.getText().toString();
+                    boolean starred = false;
+                    for (Thought t : thoughts) {
+                        if (t.getId().equals(Long.valueOf(id))) {
+                            starred = t.isStarred();
+                            break;
+                        }
+                    }
+                    starred = !starred;
+                    DataOpener db = new DataOpener(context);
+                    db.open();
+                    db.updateStar(id, starred);
+                    db.close();
+                    starView.setImageDrawable(starred ?
+                            context.getResources().getDrawable(R.drawable.ic_star):
+                            nightMode ? context.getResources().getDrawable(R.drawable.ic_star_border) :
+                            context.getResources().getDrawable(R.drawable.ic_star_border_black));
+//                    starView.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_star));
+                }
+            });
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Long id = Long.valueOf(idView.getText().toString());
-                    Thought selectedThought = null;
-                    for ( Thought t : thoughts) {
-                        if ( t.getId().equals(id)) {
-                            selectedThought = t;
-                            break;
-                        }
-                    }
+
                     Intent intent = new Intent(context, ViewActivity.class);
                     intent.putExtra("Mode", nightMode);
-                    intent.putExtra("thoughtSelected", selectedThought);
+                    intent.putExtra("thoughtSelected", id);
                     context.startActivity(intent);
                 }
             });

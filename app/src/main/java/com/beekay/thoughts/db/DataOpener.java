@@ -23,6 +23,7 @@ public class DataOpener {
     private static final String THOUGHT_TEXT = "thought_text";
     private static final String IMG_SRC = "image_src";
     private static final String IMG = "image";
+    private static final String STARRED = "starred";
     //private static final String CREATE_STATEMENT = "create table if not exists thoughts(timestamp date default (datetime('now','localtime')) not null, thought_text text not null, image_src text)";
     private static final String CREATE_STATEMENT = "create table if not exists thoughts" +
             "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
@@ -30,9 +31,10 @@ public class DataOpener {
             "thought_text TEXT NOT NULL," +
             "image_src TEXT," +
             "image BLOB, " +
-            "location TEXT)";
+            "location TEXT, " +
+            "starred INTEGER DEFAULT 0)";
 
-    private static final int VERSION = 3;
+    private static final int VERSION = 5;
     private SQLiteDatabase db;
     private  DbHelper helper;
     Context context;
@@ -53,11 +55,21 @@ public class DataOpener {
     }
 
     public Cursor retrieve(){
-        return db.query(TABLE_NAME,new String[]{ID, TIMESTAMP, THOUGHT_TEXT, IMG_SRC, IMG},null, null, null, null, "timestamp desc");
+        return db.query(TABLE_NAME,new String[]{ID, TIMESTAMP, THOUGHT_TEXT, IMG_SRC, IMG, STARRED},null, null, null, null, "timestamp desc");
     }
 
     public Cursor retrieveById(String id) {
-        return db.query(TABLE_NAME, new String[]{},ID+"=?",new String[]{id}, null, null, "1");
+        return db.query(TABLE_NAME, new String[]{ID, TIMESTAMP, THOUGHT_TEXT, IMG_SRC, IMG, STARRED},ID+"=?",new String[]{id}, null, null, "1");
+    }
+
+    public Cursor retrieveStarredThoughts() {
+        return db.query(TABLE_NAME, new String[]{ID, TIMESTAMP, THOUGHT_TEXT, IMG_SRC, IMG, STARRED},STARRED+"=?",new String[]{"1"}, null, null, "1");
+    }
+
+    public void updateStar(String id, boolean flag) {
+        ContentValues values = new ContentValues();
+        values.put(STARRED, flag ? 1 : 0);
+        db.update(TABLE_NAME, values, ID+"=?", new String[]{id});
     }
 
     public void delete(String id) {
@@ -137,6 +149,8 @@ public class DataOpener {
         helper.close();
     }
 
+
+
     private class DbHelper extends SQLiteOpenHelper{
 
         public DbHelper(Context context) {
@@ -152,11 +166,11 @@ public class DataOpener {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            if(oldVersion<3){
+            if(oldVersion < 5){
                 db.beginTransaction();
                 db.execSQL("ALTER TABLE thoughts rename to old_thoughts");
                 db.execSQL(CREATE_STATEMENT);
-                db.execSQL("INSERT INTO thoughts (timestamp, thought_text, image_src) select timestamp, thought_text, image_src from old_thoughts");
+                db.execSQL("INSERT INTO thoughts (timestamp, thought_text, image_src, image) select timestamp, thought_text, image_src, image from old_thoughts");
                 db.execSQL("DROP TABLE old_thoughts");
                 db.setTransactionSuccessful();
                 db.endTransaction();

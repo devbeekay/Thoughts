@@ -1,7 +1,6 @@
 package com.beekay.thoughts.model;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public class Thought implements Serializable {
 
@@ -10,6 +9,7 @@ public class Thought implements Serializable {
     private String timestamp;
     private String imgSource;
     private byte[] img;
+    private boolean starred;
 
     public Thought() {
     }
@@ -52,5 +52,13 @@ public class Thought implements Serializable {
 
     public void setImg(byte[] img) {
         this.img = img;
+    }
+
+    public boolean isStarred() {
+        return starred;
+    }
+
+    public void setStarred(boolean starred) {
+        this.starred = starred;
     }
 }
