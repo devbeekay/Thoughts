@@ -79,6 +79,9 @@ public class MainActivity extends AppCompatActivity {
 
             recyclerView = findViewById(R.id.recycle);
             thoughts = utilities.getThoughts();
+            for( Thought t : thoughts) {
+                System.out.println(t.getId() + " " + t.getImgSource() + (t.getImg() == null ? "null" : t.getImg().length));
+            }
             adapter = new ThoughtsAdapter(thoughts, this, nightMode);
             recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
             recyclerView.setAdapter(adapter);

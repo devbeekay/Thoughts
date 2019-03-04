@@ -5,7 +5,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
@@ -28,8 +27,8 @@ import com.beekay.thoughts.model.Thought;
 import com.beekay.thoughts.util.GlideApp;
 import com.beekay.thoughts.util.Utilities;
 import com.bumptech.glide.request.RequestOptions;
-import com.facebook.share.model.ShareLinkContent;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,12 +81,13 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
                 context.getResources().getDrawable(R.drawable.ic_star):
                 nightMode ? context.getResources().getDrawable(R.drawable.ic_star_border) :
                 context.getResources().getDrawable(R.drawable.ic_star_border_black));
-        if(thought.getImg() != null){
+        if(thought.getImg() != null && thought.getImg().length > 1) {
 //            Glide.with(context)
 //                    .load(thought.getImg())
 //                    .apply(glideOptions)
 //                    .into(holder.imgView);
-
+            System.out.println(thought.getImg());
+            System.out.println(thought.getImgSource());
             GlideApp.with(context)
                     .load(thought.getImg())
                     .into(holder.imgView);
@@ -100,12 +100,22 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
 //                    .build();
 //            holder.shareButton.setShareContent(content);
 //            }
-        }else{
+        } else if (thought.getImgSource() != null) {
+            File f = new File(thought.getImgSource());
+            if (f.exists()) {
+                GlideApp.with(context)
+                        .load(f)
+                        .into(holder.imgView);
+            } else {
+                holder.imgView.setVisibility(View.GONE);
+            }
+
+        } else{
             holder.imgView.setVisibility(View.GONE);
-            ShareLinkContent content = new ShareLinkContent.Builder()
-                    .setContentUrl(Uri.parse("www.google.com"))
-                    .setQuote(thought.getThoughtText())
-                    .build();
+//            ShareLinkContent content = new ShareLinkContent.Builder()
+//                    .setContentUrl(Uri.parse("www.google.com"))
+//                    .setQuote(thought.getThoughtText())
+//                    .build();
 //            holder.shareButton.setShareContent(content);
         }
 

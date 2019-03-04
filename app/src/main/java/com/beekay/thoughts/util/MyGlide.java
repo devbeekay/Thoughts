@@ -19,6 +19,9 @@ public class MyGlide extends AppGlideModule {
         placeHolder.setStrokeWidth(5f);
         placeHolder.setCenterRadius(30f);
         placeHolder.start();
-        builder.setDefaultRequestOptions(new RequestOptions().placeholder(placeHolder).fitCenter().diskCacheStrategy(DiskCacheStrategy.DATA));
+        builder.setDefaultRequestOptions(new RequestOptions()
+                .placeholder(placeHolder)
+                .fitCenter()
+                .diskCacheStrategy(DiskCacheStrategy.DATA));
     }
 }

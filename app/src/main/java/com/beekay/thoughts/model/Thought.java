@@ -61,4 +61,10 @@ public class Thought implements Serializable {
     public void setStarred(boolean starred) {
         this.starred = starred;
     }
+
+    @Override
+    public String toString() {
+        String result = this.getId() + " " + this.getThoughtText() + " " + this.getImgSource();
+        return result;
+    }
 }

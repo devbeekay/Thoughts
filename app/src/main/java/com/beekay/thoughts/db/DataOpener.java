@@ -7,9 +7,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.support.v4.graphics.BitmapCompat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class DataOpener {
@@ -34,7 +36,8 @@ public class DataOpener {
             "location TEXT, " +
             "starred INTEGER DEFAULT 0)";
 
-    private static final int VERSION = 5;
+    private static final int VERSION = 6;
+    private static final int BYTE_MAX = 2 * 1024 * 1024;
     private SQLiteDatabase db;
     private  DbHelper helper;
     Context context;
@@ -79,37 +82,70 @@ public class DataOpener {
     public void update(String id, String thought, String imgSrc) throws IOException {
         ContentValues values = new ContentValues();
         values.put(THOUGHT_TEXT, thought);
-        values.put(IMG_SRC,imgSrc);
-        db.update(TABLE_NAME,values, ID+"=?", new String[] {id});
-        if (imgSrc!=null && imgSrc.trim().length()>0){
-            File imgFile = new File(imgSrc);
-            if(imgFile.exists()) {
-                BitmapFactory.Options options = new BitmapFactory.Options();
-//                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-                Bitmap img = BitmapFactory.decodeFile(imgSrc);
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                img.compress(Bitmap.CompressFormat.PNG, 0, stream);
-                insertImage(String.valueOf(id), stream.toByteArray());
-                stream.close();
+        values.put(IMG_SRC, imgSrc);
+        db.update(TABLE_NAME, values, ID + "=?", new String[]{id});
+        if (imgSrc != null && imgSrc.trim().length() > 0) {
+            Bitmap img = getBitmapFromSource(imgSrc);
+            if (img != null) {
+                int bitmapSize = BitmapCompat.getAllocationByteCount(img);
+                if (bitmapSize >= BYTE_MAX) {
+                    String imagesFolderPath = context.getFilesDir().getAbsolutePath() + "/images";
+                    File fileDir = new File(imagesFolderPath);
+                    if (!fileDir.exists()) {
+                        fileDir.mkdirs();
+                    }
+                    String imagePath = imagesFolderPath + "/" + id + ".png";
+                    FileOutputStream fos = new FileOutputStream(new File(imagePath));
+                    img.compress(Bitmap.CompressFormat.PNG, 0, fos);
+                    fos.close();
+                    insertImage(id, imagePath);
+                } else {
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    img.compress(Bitmap.CompressFormat.PNG, 0, stream);
+                    byte[] imgBytes = stream.toByteArray();
+                    insertImage(id, imgBytes);
+                    stream.close();
+                }
             }
         }
+    }
+
+    private Bitmap getBitmapFromSource(String imgSrc) {
+        File imgFile = new File(imgSrc);
+        if(imgFile.exists()) {
+            Bitmap img = BitmapFactory.decodeFile(imgSrc);
+            return img;
+        }
+        return null;
     }
 
     public long insert(String thought, String imgSrc) throws IOException {
         ContentValues values = new ContentValues();
         values.put(THOUGHT_TEXT, thought);
-        values.put(IMG_SRC,imgSrc);
+
         long id = db.insertOrThrow(TABLE_NAME,null,values);
-        if (imgSrc!=null && imgSrc.trim().length()>0){
-            File imgFile = new File(imgSrc);
-            if(imgFile.exists()) {
-                BitmapFactory.Options options = new BitmapFactory.Options();
-//                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-                Bitmap img = BitmapFactory.decodeFile(imgSrc);
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                img.compress(Bitmap.CompressFormat.PNG, 0, stream);
-                insertImage(String.valueOf(id), stream.toByteArray());
-                stream.close();
+        if (imgSrc != null && imgSrc.trim().length() > 0) {
+            Bitmap img = getBitmapFromSource(imgSrc);
+            if (img != null) {
+                int bitmapSize = BitmapCompat.getAllocationByteCount(img);
+                if (bitmapSize >= BYTE_MAX) {
+                    String imagesFolderPath = context.getFilesDir().getAbsolutePath() + "/images";
+                    File fileDir = new File(imagesFolderPath);
+                    if (!fileDir.exists()) {
+                        fileDir.mkdirs();
+                    }
+                    String imagePath = imagesFolderPath + "/" + id + ".png";
+                    FileOutputStream fos = new FileOutputStream(new File(imagePath));
+                    img.compress(Bitmap.CompressFormat.PNG, 0, fos);
+                    fos.close();
+                    insertImage(String.valueOf(id), imagePath);
+                } else {
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    img.compress(Bitmap.CompressFormat.PNG, 0, stream);
+                    byte[] imgBytes = stream.toByteArray();
+                    insertImage(String.valueOf(id), imgBytes);
+                    stream.close();
+                }
             }
         }
         return id;
@@ -123,8 +159,6 @@ public class DataOpener {
             if (imgSrc!=null && imgSrc.trim().length()>0){
                 File imgFile = new File(imgSrc);
                 if(imgFile.exists()) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-//                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
                     Bitmap img = BitmapFactory.decodeFile(imgSrc);
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     img.compress(Bitmap.CompressFormat.PNG, 0, stream);
@@ -139,9 +173,17 @@ public class DataOpener {
         }
     }
 
-    public void insertImage(String id, byte[] img) {
+    private void insertImage(String id, byte[] img) {
         ContentValues values = new ContentValues();
         values.put(IMG, img);
+        values.put(IMG_SRC,"");
+        db.update(TABLE_NAME,values,ID + "=?", new String[]{id});
+    }
+
+    private void insertImage(String id, String imgSrc) {
+        ContentValues values = new ContentValues();
+        values.put(IMG_SRC, imgSrc);
+        values.put(IMG, "");
         db.update(TABLE_NAME,values,ID + "=?", new String[]{id});
     }
 
@@ -175,6 +217,8 @@ public class DataOpener {
                 db.setTransactionSuccessful();
                 db.endTransaction();
 //                migrate();
+            } if (oldVersion < 6) {
+                db.execSQL("DELETE FROM thoughts where thought_text='Love is you'");
             }
             onCreate(db);
         }

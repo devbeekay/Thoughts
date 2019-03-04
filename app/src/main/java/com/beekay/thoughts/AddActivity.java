@@ -64,9 +64,20 @@ public class AddActivity extends AppCompatActivity {
         previewImage = findViewById(R.id.add_img_preview);
         if (thought != null) {
             thoughtField.setText(thought.getThoughtText());
-            if (thought.getImg() != null) {
-                Bitmap myBitMap = BitmapFactory.decodeByteArray(thought.getImg(),0,thought.getImg().length);
+            if (thought.getImg() != null && thought.getImg().length > 1) {
+                System.out.println(thought.getImg().length);
+
+                Bitmap myBitMap = BitmapFactory.decodeByteArray(thought.getImg(), 0, thought.getImg().length);
                 previewImage.setImageBitmap(myBitMap);
+            } else if(thought.getImgSource() != null) {
+                System.out.println(thought.getImgSource());
+                File f = new File(thought.getImgSource());
+                if (f.exists()) {
+                    System.out.println("File Exists");
+                    Bitmap fileBitmap = BitmapFactory.decodeFile(f.getAbsolutePath());
+//                    totalImageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                    previewImage.setImageBitmap(fileBitmap);
+                }
             }
         }
         saveButton = findViewById(R.id.save);
