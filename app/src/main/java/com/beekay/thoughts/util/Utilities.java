@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 
 import com.beekay.thoughts.db.DataOpener;
+import com.beekay.thoughts.model.Reminder;
 import com.beekay.thoughts.model.Thought;
 
 import java.util.ArrayList;
@@ -47,6 +48,25 @@ public class Utilities {
         cursor.close();
         db.close();
         return thoughts;
+    }
+
+    public List<Reminder> getReminders() {
+        DataOpener db = new DataOpener(context);
+        db.openRead();
+        Cursor cursor = db.retrieveReminders();
+        List<Reminder> reminders = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            Reminder reminder = new Reminder();
+            reminder.setId(cursor.getInt(cursor.getColumnIndex("id")));
+            reminder.setReminderText(cursor.getString(cursor.getColumnIndex("reminder")));
+            reminder.setToBeDoneOn(cursor.getString(cursor.getColumnIndex("date_when")));
+            reminder.setStatus(cursor.getInt(cursor.getColumnIndex("done")) == 1);
+            reminder.setCreatedOn(cursor.getString(cursor.getColumnIndex("timestamp")));
+            reminders.add(reminder);
+        }
+        cursor.close();
+        db.close();
+        return reminders;
     }
 
     private List<Thought> createThoughtFromCursor(Cursor cursor) {

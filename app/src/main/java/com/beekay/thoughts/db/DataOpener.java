@@ -13,6 +13,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class DataOpener {
 
@@ -26,7 +28,7 @@ public class DataOpener {
     private static final String IMG_SRC = "image_src";
     private static final String IMG = "image";
     private static final String STARRED = "starred";
-    //private static final String CREATE_STATEMENT = "create table if not exists thoughts(timestamp date default (datetime('now','localtime')) not null, thought_text text not null, image_src text)";
+
     private static final String CREATE_STATEMENT = "create table if not exists thoughts" +
             "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
             "timestamp DATE DEFAULT (datetime('now','localtime')) NOT NULL," +
@@ -36,10 +38,24 @@ public class DataOpener {
             "location TEXT, " +
             "starred INTEGER DEFAULT 0)";
 
-    private static final int VERSION = 6;
+    private static final String RTABLE_NAME = "reminders";
+    private static final String REMINDER = "reminder";
+    private static final String DATE_WHEN = "date_when";
+    private static final String DONE = "done";
+
+    private static final String RCREATE_STATEMENT = "create table if not exists reminders" +
+            "(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+            "timestamp DATE DEFAULT (datetime('now', 'localtime')) NOT NULL, " +
+            "reminder TEXT NOT NULL, " +
+            "date_when DATE NOT NULL, " +
+            "done INTEGER DEFAULT 0)";
+
+    private static final int VERSION = 7;
     private static final int BYTE_MAX = 2 * 1024 * 1024;
     private SQLiteDatabase db;
     private  DbHelper helper;
+
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("d-M-Y H:m");
     Context context;
 
     public DataOpener(Context context){
@@ -58,7 +74,18 @@ public class DataOpener {
     }
 
     public Cursor retrieve(){
-        return db.query(TABLE_NAME,new String[]{ID, TIMESTAMP, THOUGHT_TEXT, IMG_SRC, IMG, STARRED},null, null, null, null, "timestamp desc");
+        return db.query(TABLE_NAME,new String[]{ID, TIMESTAMP, THOUGHT_TEXT, IMG_SRC, IMG, STARRED},
+                null, null, null, null, "timestamp desc");
+    }
+
+    public Cursor retrieveReminders() {
+        return db.query(RTABLE_NAME, new String[] {ID, REMINDER, TIMESTAMP, DATE_WHEN, DONE},
+                null, null, null, null, "timestamp desc");
+    }
+
+    public Cursor retrieveReminders(int doneValue) {
+        return db.query(RTABLE_NAME, new String[] {ID, REMINDER, TIMESTAMP, DATE_WHEN, DONE},
+                "done=?", new String[] {""+doneValue}, null, null, "timestamp desc");
     }
 
     public Cursor retrieveById(String id) {
@@ -118,6 +145,21 @@ public class DataOpener {
         }
         return null;
     }
+
+    public long insertReminder(String reminder, Date dateWhen) {
+        ContentValues values = new ContentValues();
+        values.put(REMINDER, reminder);
+        values.put(DATE_WHEN, sdf.format(dateWhen));
+        return db.insertOrThrow(RTABLE_NAME, null, values);
+    }
+
+    public void updateReminder(int id, int doneValue) {
+        ContentValues values = new ContentValues();
+        values.put(DONE, 1);
+        values.put(DONE, doneValue);
+        db.update(RTABLE_NAME, values, "id=?", new String[]{""+id});
+    }
+
 
     public long insert(String thought, String imgSrc) throws IOException {
         ContentValues values = new ContentValues();
@@ -203,24 +245,15 @@ public class DataOpener {
         public void onCreate(SQLiteDatabase db) {
 
             db.execSQL(CREATE_STATEMENT);
-
+            db.execSQL(RCREATE_STATEMENT);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            if(oldVersion < 5){
-                db.beginTransaction();
-                db.execSQL("ALTER TABLE thoughts rename to old_thoughts");
-                db.execSQL(CREATE_STATEMENT);
-                db.execSQL("INSERT INTO thoughts (timestamp, thought_text, image_src, image) select timestamp, thought_text, image_src, image from old_thoughts");
-                db.execSQL("DROP TABLE old_thoughts");
-                db.setTransactionSuccessful();
-                db.endTransaction();
-//                migrate();
-            } if (oldVersion < 6) {
-                db.execSQL("DELETE FROM thoughts where thought_text='Love is you'");
+            if(oldVersion < 7){
+                onCreate(db);
             }
-            onCreate(db);
+
         }
     }
 

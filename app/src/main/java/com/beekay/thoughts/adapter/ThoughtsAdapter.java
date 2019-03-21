@@ -86,8 +86,8 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
 //                    .load(thought.getImg())
 //                    .apply(glideOptions)
 //                    .into(holder.imgView);
-            System.out.println(thought.getImg());
-            System.out.println(thought.getImgSource());
+//            System.out.println(thought.getImg());
+//            System.out.println(thought.getImgSource());
             GlideApp.with(context)
                     .load(thought.getImg())
                     .into(holder.imgView);

@@ -17,6 +17,11 @@
         android:title="Starred Thoughts" />
 
     <item
+        android:id="@+id/action_reminders"
+        android:orderInCategory="100"
+        android:title="Reminders"/>
+
+    <item
         android:id="@+id/action_night_mode"
         android:orderInCategory="100"
         app:showAsAction="never"
