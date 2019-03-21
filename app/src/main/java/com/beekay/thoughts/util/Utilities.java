@@ -7,11 +7,15 @@ import com.beekay.thoughts.db.DataOpener;
 import com.beekay.thoughts.model.Reminder;
 import com.beekay.thoughts.model.Thought;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Utilities {
     Context context;
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("d-M-Y k:m a");
+    private static final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy H:m");
 
     public Utilities(Context context) {
         this.context = context;
@@ -59,7 +63,12 @@ public class Utilities {
             Reminder reminder = new Reminder();
             reminder.setId(cursor.getInt(cursor.getColumnIndex("id")));
             reminder.setReminderText(cursor.getString(cursor.getColumnIndex("reminder")));
-            reminder.setToBeDoneOn(cursor.getString(cursor.getColumnIndex("date_when")));
+            String d = cursor.getString(cursor.getColumnIndex("date_when"));
+            try {
+                reminder.setToBeDoneOn(sdf.format(df.parse(d)));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
             reminder.setStatus(cursor.getInt(cursor.getColumnIndex("done")) == 1);
             reminder.setCreatedOn(cursor.getString(cursor.getColumnIndex("timestamp")));
             reminders.add(reminder);

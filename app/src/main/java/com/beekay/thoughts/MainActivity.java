@@ -66,9 +66,8 @@ public class MainActivity extends AppCompatActivity {
     boolean secondaryFab = false;
 
     EditText dialogTime;
-    Date date = null;
     SimpleDateFormat format = new SimpleDateFormat("d-M-Y k:m a");
-    final Calendar calendar = Calendar.getInstance();
+    Calendar calendar = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
                     cancel.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            System.out.println(calendar.getTime());
                             dialog.cancel();
                         }
                     });
@@ -132,12 +132,12 @@ public class MainActivity extends AppCompatActivity {
                             if(reminderField.getText() == null ||
                             reminderField.getText().toString() == null ||
                             reminderField.getText().toString().trim().length() == 0 ||
-                            date == null){
+                            calendar == null){
                                 Toast.makeText(MainActivity.this, "Both the fields are Mandator",
                                         Toast.LENGTH_LONG).show();
                                 dialog.cancel();
                             } else {
-                                setReminder(reminderField.getText().toString(), date);
+                                setReminder(reminderField.getText().toString(), calendar.getTime());
                                 dialog.cancel();
                             }
                         }
@@ -179,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setReminder(String reminder, Date date) {
+        System.out.println(date);
         DataOpener db = new DataOpener(MainActivity.this);
         db.open();
         int nId = (int) db.insertReminder(reminder, date);
@@ -198,7 +199,6 @@ public class MainActivity extends AppCompatActivity {
         final Dialog dialog = new Dialog(MainActivity.this, android.R.style.Theme_Material_Dialog);
         dialog.setTitle("Select Date and Time");
         dialog.setContentView(R.layout.dialog_date_time_picker);
-        date = new Date();
         final CalendarView cv = dialog.findViewById(R.id.dateView);
         Button cancelButton = dialog.findViewById(R.id.dateCancel);
         Button setButton = dialog.findViewById(R.id.dateSet);
@@ -210,14 +210,19 @@ public class MainActivity extends AppCompatActivity {
         for(int i = 0; i<12; i++){hours[i]=i;}
         for(int i = 0; i<=59; i++){minutes[i]=i;}
         String[] ms = new String[] {"AM", "PM"};
-        hoursSpinner.setAdapter(new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, hours));
-        minutesSpinner.setAdapter(new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, minutes));
-        msSpinner.setAdapter(new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, ms));
-
+        hoursSpinner.setAdapter(new ArrayAdapter<Integer>(
+                MainActivity.this, android.R.layout.simple_list_item_1, hours));
+        minutesSpinner.setAdapter(new ArrayAdapter<Integer>(
+                MainActivity.this, android.R.layout.simple_list_item_1, minutes));
+        msSpinner.setAdapter(new ArrayAdapter<>(
+                MainActivity.this, android.R.layout.simple_list_item_1, ms));
+        calendar = Calendar.getInstance();
         cv.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
-            public void onSelectedDayChange(@NonNull CalendarView view, int year, int month, int dayOfMonth) {
-                date = new Date(year, month, dayOfMonth);
+            public void onSelectedDayChange(
+                    @NonNull CalendarView view, int year, int month, int dayOfMonth) {
+                calendar.set(year, month, dayOfMonth);
+
             }
         });
 
@@ -234,11 +239,13 @@ public class MainActivity extends AppCompatActivity {
                 int hour = hoursSpinner.getSelectedItem() == null
                         ? 6 : (int)hoursSpinner.getSelectedItem();
 
-                date.setHours(msSpinner.getSelectedItem().equals("AM") ? hour : hour + 12);
-                date.setMinutes(minutesSpinner.getSelectedItem() == null ?
+                calendar.set(Calendar.HOUR_OF_DAY,
+                        msSpinner.getSelectedItem().equals("AM") ? hour : hour + 12);
+                calendar.set(Calendar.MINUTE,
+                        minutesSpinner.getSelectedItem() == null ?
                         0 : (int)minutesSpinner.getSelectedItem());
 
-                dialogTime.setText(format.format(date));
+                dialogTime.setText(format.format(calendar.getTime()));
                 dialog.cancel();
             }
         });
