@@ -85,7 +85,7 @@ public class AddActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(thoughtField.getText().toString().trim().length() == 0 ){
-                    Toast.makeText(AddActivity.this, "Cannot imsert empty though", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddActivity.this, "Cannot insert empty thought", Toast.LENGTH_SHORT).show();
                 } else {
                     DataOpener db = new DataOpener(AddActivity.this);
                     db.open();

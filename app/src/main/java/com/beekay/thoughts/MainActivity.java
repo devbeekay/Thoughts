@@ -7,6 +7,7 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -34,6 +35,8 @@ import com.beekay.thoughts.model.Thought;
 import com.beekay.thoughts.receivers.ScheduledNotification;
 import com.beekay.thoughts.util.Utilities;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -44,6 +47,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
 import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_YES;
@@ -274,10 +279,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        System.out.println("Came to activity Result");
-        thoughts.clear();
-        thoughts = utilities.getThoughts();
-        adapter.swap(thoughts);
+        if (requestCode == 1) {
+            System.out.println("Came to activity Result");
+            thoughts.clear();
+            thoughts = utilities.getThoughts();
+            adapter.swap(thoughts);
+        } else if (requestCode == 101) {
+//            Uri uri = data.getData();
+            Toast.makeText(this, "Success", Toast.LENGTH_LONG).show();
+
+        }
     }
 
     @Override
@@ -364,8 +375,18 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, Reminders.class);
             intent.putExtra("Mode", nightMode);
             startActivity(intent);
+        } else if (item.getItemId() == R.id.exportData) {
+            exportDb();
+        } else if (item.getItemId() == R.id.importData) {
+            importData();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void importData() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        startActivityForResult(intent, 101);
     }
 
     @Override
@@ -383,31 +404,61 @@ public class MainActivity extends AppCompatActivity {
         export.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    File download_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                    File data = Environment.getDataDirectory();
-
-                    if (download_folder.canWrite()) {
-                        String currentDBPath = "//data//" + getPackageName() + "//databases//" + "thoughts.db";
-                        String backupDBPath = "thoughts.db";
-                        File currentDB = new File(data, currentDBPath);
-                        File backupDB = new File(download_folder, backupDBPath);
-
-                        if (currentDB.exists()) {
-                            FileChannel src = new FileInputStream(currentDB).getChannel();
-                            FileChannel dst = new FileOutputStream(backupDB).getChannel();
-                            dst.transferFrom(src, 0, src.size());
-                            src.close();
-                            dst.close();
-                        }
-                    }
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                exportDb();
 
             }
         });
     }
+
+    private void exportDb() {
+        final int BUFFER = 2048;
+        try {
+            File download_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File desFile = new File(download_folder.getAbsolutePath() + "//thougts.zip");
+            File data = Environment.getDataDirectory();
+            File db = new File(data.getAbsolutePath() + "//data//" + getPackageName() + "//databases");
+            File images = new File(data.getAbsolutePath() + "//data//" + getPackageName() + "//files//images");
+
+            FileOutputStream fos = new FileOutputStream(desFile);
+            ZipOutputStream zos = new ZipOutputStream(fos);
+
+            File[] files = db.listFiles();
+            for(File f : files) {
+                byte[] buf = new byte[BUFFER];
+                FileInputStream fis = new FileInputStream(f);
+                zos.putNextEntry(new ZipEntry(f.getAbsolutePath()));
+                int length;
+                while ((length = fis.read(buf)) > 0) {
+                    zos.write(buf, 0, length);
+                }
+                zos.closeEntry();
+                fis.close();
+            }
+
+            File[] imageList = images.listFiles();
+
+            for(File f : imageList) {
+                byte[] buf = new byte[BUFFER];
+                FileInputStream fis = new FileInputStream(f);
+                zos.putNextEntry(new ZipEntry(f.getAbsolutePath()));
+                int length;
+                while ((length = fis.read(buf)) > 0) {
+                    zos.write(buf, 0, length);
+                }
+                zos.closeEntry();
+                fis.close();
+            }
+
+            zos.close();
+            Toast.makeText(this, "Data Exported to Downloads Folder", Toast.LENGTH_LONG).show();
+        } catch (FileNotFoundException e) {
+            Toast.makeText(MainActivity.this, "Could Not Export Data", Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        } catch (IOException e) {
+            Toast.makeText(MainActivity.this, "Could Not Export Data", Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+    }
+
+
 }
