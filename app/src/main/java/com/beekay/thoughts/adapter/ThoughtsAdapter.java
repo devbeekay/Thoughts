@@ -32,22 +32,17 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.ThoughtViewHolder>
-    implements Filterable {
+public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.ThoughtViewHolder>{
 
-    List<Thought> thoughts;
+    List<Thought> thoughts = new ArrayList<>();
     Context context;
-    List<Thought> filteredThoughts = new ArrayList<>();
-    List<Thought> oldThoughts = new ArrayList<>();
     RequestOptions glideOptions;
     Utilities utilities;
     boolean nightMode;
 
     public ThoughtsAdapter(List<Thought> thoughts, Context context, boolean nightMode) {
-        this.thoughts = thoughts;
+        this.thoughts.addAll(thoughts);
         this.context = context;
-        this.filteredThoughts.addAll(thoughts);
-        this.oldThoughts.addAll(thoughts);
         glideOptions = new RequestOptions();
         glideOptions.fitCenter();
 //        CircularProgressDrawable placeHolder = new CircularProgressDrawable(context);
@@ -126,40 +121,6 @@ public class ThoughtsAdapter extends RecyclerView.Adapter<ThoughtsAdapter.Though
     public int getItemCount() {
         return thoughts.size();
     }
-
-    @Override
-    public Filter getFilter() {
-        return new Filter() {
-            @Override
-            protected FilterResults performFiltering(CharSequence constraint) {
-                String query = constraint.toString();
-                if (query.isEmpty()){
-                    filteredThoughts.clear();
-                    filteredThoughts.addAll(oldThoughts);
-                } else {
-                    List<Thought> fList = new ArrayList<>();
-                    for ( Thought t : oldThoughts ) {
-                        if (t.getThoughtText().toLowerCase().contains(query.toLowerCase())) {
-                            fList.add(t);
-                        }
-                    }
-                    filteredThoughts.clear();
-                    filteredThoughts.addAll(fList);
-                }
-
-                FilterResults fResults = new FilterResults();
-                fResults.values = filteredThoughts;
-                return  fResults;
-            }
-
-            @Override
-            protected void publishResults(CharSequence constraint, FilterResults results) {
-                filteredThoughts = (List<Thought>) results.values;
-                swap(filteredThoughts);
-            }
-        };
-    }
-
 
     class ThoughtViewHolder extends RecyclerView.ViewHolder{
 

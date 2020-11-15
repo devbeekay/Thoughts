@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.app.Dialog;
 import android.app.PendingIntent;
 import android.app.SearchManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -27,6 +28,7 @@ import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.beekay.thoughts.adapter.ThoughtsAdapter;
@@ -44,10 +46,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
@@ -61,8 +65,7 @@ public class MainActivity extends AppCompatActivity {
     List<Thought> thoughts;
     Utilities utilities;
     SearchView sView;
-
-
+    List<Thought> searchedThoughts = new ArrayList<>();
 
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
@@ -73,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
     EditText dialogTime;
     SimpleDateFormat format = new SimpleDateFormat("d-M-Y k:m a");
     Calendar calendar = null;
+    Toolbar toolbar;
+    TextView toolbarTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +91,8 @@ public class MainActivity extends AppCompatActivity {
 
             utilities = new Utilities(this);
 
-            Toolbar toolbar = findViewById(R.id.toolbar);
+            toolbar = findViewById(R.id.toolbar);
+            toolbarTitle = toolbar.findViewById(R.id.toolbar_title);
 
             //Changes related to night mode. Make toolbar dark and remove status bar settings via setSystemUiVisibility(0)
             if (nightMode) {
@@ -106,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
 
             final FloatingActionButton fab = findViewById(R.id.fab_thought);
             final FloatingActionButton fabReminder = findViewById(R.id.fab_reminder);
-            
+
             fabReminder.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -126,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
                     cancel.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            System.out.println(calendar.getTime());
                             dialog.cancel();
                         }
                     });
@@ -134,10 +139,10 @@ public class MainActivity extends AppCompatActivity {
                     ok.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            if(reminderField.getText() == null ||
-                            reminderField.getText().toString() == null ||
-                            reminderField.getText().toString().trim().length() == 0 ||
-                            calendar == null){
+                            if (reminderField.getText() == null ||
+                                    reminderField.getText().toString() == null ||
+                                    reminderField.getText().toString().trim().length() == 0 ||
+                                    calendar == null) {
                                 Toast.makeText(MainActivity.this, "Both the fields are Mandator",
                                         Toast.LENGTH_LONG).show();
                                 dialog.cancel();
@@ -154,9 +159,9 @@ public class MainActivity extends AppCompatActivity {
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(secondaryFab) {
+                    if (secondaryFab) {
                         secondaryFab = false;
-                        fabReminder.setVisibility(View.GONE);
+                        fabReminder.hide();
 //                        RotateAnimation rotate = new RotateAnimation(45f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
 //                        rotate.setFillAfter(true);
 //                        fab.startAnimation(rotate);
@@ -170,13 +175,13 @@ public class MainActivity extends AppCompatActivity {
 //                        rotate.setFillAfter(true);
 //                        fab.startAnimation(rotate);
                         fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_note_add));
-                        fabReminder.setVisibility(View.VISIBLE);
+                        fabReminder.show();
                         secondaryFab = true;
                     }
                 }
             });
 //            throw new Exception("something");
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             //fallback export db save your ass\
             ex.printStackTrace();
             backupDB();
@@ -212,9 +217,13 @@ public class MainActivity extends AppCompatActivity {
         final Spinner msSpinner = dialog.findViewById(R.id.ms);
         final Integer[] hours = new Integer[12];
         final Integer[] minutes = new Integer[60];
-        for(int i = 0; i<12; i++){hours[i]=i;}
-        for(int i = 0; i<=59; i++){minutes[i]=i;}
-        String[] ms = new String[] {"AM", "PM"};
+        for (int i = 0; i < 12; i++) {
+            hours[i] = i;
+        }
+        for (int i = 0; i <= 59; i++) {
+            minutes[i] = i;
+        }
+        String[] ms = new String[]{"AM", "PM"};
         hoursSpinner.setAdapter(new ArrayAdapter<Integer>(
                 MainActivity.this, android.R.layout.simple_list_item_1, hours));
         minutesSpinner.setAdapter(new ArrayAdapter<Integer>(
@@ -242,13 +251,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 int hour = hoursSpinner.getSelectedItem() == null
-                        ? 6 : (int)hoursSpinner.getSelectedItem();
+                        ? 6 : (int) hoursSpinner.getSelectedItem();
 
                 calendar.set(Calendar.HOUR_OF_DAY,
                         msSpinner.getSelectedItem().equals("AM") ? hour : hour + 12);
                 calendar.set(Calendar.MINUTE,
                         minutesSpinner.getSelectedItem() == null ?
-                        0 : (int)minutesSpinner.getSelectedItem());
+                                0 : (int) minutesSpinner.getSelectedItem());
 
                 dialogTime.setText(format.format(calendar.getTime()));
                 dialog.cancel();
@@ -285,9 +294,9 @@ public class MainActivity extends AppCompatActivity {
             thoughts = utilities.getThoughts();
             adapter.swap(thoughts);
         } else if (requestCode == 101) {
-//            Uri uri = data.getData();
-            Toast.makeText(this, "Success", Toast.LENGTH_LONG).show();
-
+            String uri = data.getData().getPath();
+            Toast.makeText(this, uri, Toast.LENGTH_LONG).show();
+            importDb(data.getData());
         }
     }
 
@@ -306,29 +315,47 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
-        SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         sView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        sView.setSuggestionsAdapter(null);
-//        SearchView.SearchAutoComplete sView.findViewById(R.id.search_src_text);
-        sView.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
-        sView.setMaxWidth(Integer.MAX_VALUE);
-        sView.setElevation(20.0f);
 
         sView.setQueryHint("Search here");
         sView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                adapter.getFilter().filter(query);
-                sView.clearFocus();
+                if (query.length() == 0) {
+                    adapter.swap(thoughts);
+                } else {
+                    searchedThoughts.clear();
+                    for (Thought t : thoughts) {
+                        if (t.getThoughtText().toLowerCase().contains(query.toLowerCase())) {
+                            searchedThoughts.add(t);
+                        }
+                    }
+                    adapter.swap(searchedThoughts);
+                }
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                adapter.getFilter().filter(newText);
                 return false;
             }
         });
+
+        sView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toolbarTitle.setVisibility(View.GONE);
+            }
+        });
+
+        sView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                toolbarTitle.setVisibility(View.VISIBLE);
+                return false;
+            }
+        });
+
         return true;
     }
 
@@ -353,9 +380,7 @@ public class MainActivity extends AppCompatActivity {
 //                }
 //            }
 //        }
-        if (item.getItemId() == R.id.action_search){
-            return true;
-        }else if ( item.getItemId() == R.id.action_night_mode) {
+        if (item.getItemId() == R.id.action_night_mode) {
             if (nightMode) {
                 nightMode = false;
                 AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO);
@@ -393,6 +418,7 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         if (!sView.isIconified()) {
             sView.setIconified(true);
+            adapter.swap(thoughts);
             return;
         }
         super.onBackPressed();
@@ -423,7 +449,7 @@ public class MainActivity extends AppCompatActivity {
             ZipOutputStream zos = new ZipOutputStream(fos);
 
             File[] files = db.listFiles();
-            for(File f : files) {
+            for (File f : files) {
                 byte[] buf = new byte[BUFFER];
                 FileInputStream fis = new FileInputStream(f);
                 zos.putNextEntry(new ZipEntry(f.getAbsolutePath()));
@@ -437,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
 
             File[] imageList = images.listFiles();
 
-            for(File f : imageList) {
+            for (File f : imageList) {
                 byte[] buf = new byte[BUFFER];
                 FileInputStream fis = new FileInputStream(f);
                 zos.putNextEntry(new ZipEntry(f.getAbsolutePath()));
@@ -460,5 +486,48 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void importDb(Uri path) {
+        ZipInputStream zis = null;
+        ContentResolver cr = getContentResolver();
+        try {
+            zis = new ZipInputStream(cr.openInputStream(path));
+            ZipEntry ze;
+            int count;
+            byte[] buffer = new byte[2048];
+            while ((ze = zis.getNextEntry()) != null) {
+                File f = new File("/", ze.getName());
+                File dir = ze.isDirectory() ? f : f.getParentFile();
+                if (!dir.isDirectory() && !dir.mkdirs()) {
+                    throw new FileNotFoundException("Failed to ensure directory: " + dir.getAbsolutePath());
+                }
+
+                if (ze.isDirectory()) {
+                    continue;
+                }
+
+                FileOutputStream fout = new FileOutputStream(f);
+                try {
+                    while ((count = zis.read(buffer)) != -1) {
+                        fout.write(buffer, 0, count);
+                    }
+                } finally {
+                    fout.close();
+                }
+            }
+        } catch (FileNotFoundException e) {
+            Toast.makeText(MainActivity.this, "Could not import db", Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (zis != null) {
+                try {
+                    zis.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
 }

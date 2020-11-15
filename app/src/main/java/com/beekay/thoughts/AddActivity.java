@@ -37,8 +37,31 @@ public class AddActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
-
+        thoughtField = findViewById(R.id.thoughtField);
+        previewImage = findViewById(R.id.add_img_preview);
         Intent i = getIntent();
+        if (Intent.ACTION_SEND.equals(i.getAction()) && i.getType() != null) {
+            if ("text/plain".equals(i.getType())) {
+                thoughtField.setText(i.getStringExtra(Intent.EXTRA_TEXT));
+            } else if (i.getType().startsWith("image/")) {
+                Uri uri = i.getParcelableExtra(Intent.EXTRA_STREAM);
+                if ( uri != null){
+                    Toast.makeText(AddActivity.this, getPathFromUri(uri), Toast.LENGTH_SHORT).show();
+                    String realPath = getPathFromUri(uri);
+                    boolean found = false;
+                    File img = new File(realPath);
+                    if(img.exists()) {
+                        imgPath = realPath;
+                        Bitmap selectedImg = BitmapFactory.decodeFile(imgPath);
+                        previewImage.setImageBitmap(selectedImg);
+                    } else {
+                        Toast.makeText(this, "Image Doesn't exist", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    System.out.println("URI is null");
+                }
+            }
+        }
         Bundle intentBundle = i.getExtras();
         boolean editField = intentBundle.containsKey("Edit") && intentBundle.getBoolean("Edit");
         if (editField){
@@ -60,8 +83,7 @@ public class AddActivity extends AppCompatActivity {
         }
 
 
-        thoughtField = findViewById(R.id.thoughtField);
-        previewImage = findViewById(R.id.add_img_preview);
+
         if (thought != null) {
             thoughtField.setText(thought.getThoughtText());
             if (thought.getImg() != null && thought.getImg().length > 1) {
@@ -117,6 +139,8 @@ public class AddActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.insert_photo) {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(Intent.createChooser(intent,"Select Picture"), 100);
+        } else if (item.getItemId() == android.R.id.home) {
+            finish();
         }
         return true;
     }
