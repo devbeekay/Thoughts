@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/thoughtsFragment">
+
+    <fragment
+        android:id="@+id/thoughtsFragment"
+        android:name="com.beekay.thoughts.ui.ThoughtsFragment"
+        android:label="ThoughtsFragment" >
+        <action
+            android:id="@+id/action_thoughtsFragment_to_remindersFragment"
+            app:destination="@id/remindersFragment" />
+        <action
+            android:id="@+id/action_thoughtsFragment_to_addThoughtFragment"
+            app:destination="@id/addThoughtFragment" />
+        <action
+            android:id="@+id/action_thoughtsFragment_to_addReminderFragment"
+            app:destination="@id/addReminderFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/remindersFragment"
+        android:name="com.beekay.thoughts.ui.RemindersFragment"
+        android:label="fragment_reminders"
+        tools:layout="@layout/fragment_reminders" />
+    <fragment
+        android:id="@+id/addThoughtFragment"
+        android:name="com.beekay.thoughts.ui.AddThoughtFragment"
+        android:label="fragment_add_thought"
+        tools:layout="@layout/fragment_add_thought" />
+    <fragment
+        android:id="@+id/addReminderFragment"
+        android:name="com.beekay.thoughts.ui.AddReminderFragment"
+        android:label="AddReminderFragment" />
+</navigation>

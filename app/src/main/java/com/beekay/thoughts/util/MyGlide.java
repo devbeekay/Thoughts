@@ -1,8 +1,8 @@
 package com.beekay.thoughts.util;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v4.widget.CircularProgressDrawable;
+import androidx.annotation.NonNull;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.GlideBuilder;
 import com.bumptech.glide.annotation.GlideModule;

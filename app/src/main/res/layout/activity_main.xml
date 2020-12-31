@@ -1,46 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <include
-        android:id="@+id/toolbar"
-        layout="@layout/toolbar" />
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycle"
+    <fragment
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="?attr/actionBarSize"
-        android:paddingBottom="?attr/actionBarSize"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        tools:listitem="@layout/recycler_view_item" />
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_thought"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:elevation="5dp"
-        android:src="@drawable/ic_add_white"
-        app:elevation="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_reminder"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        app:fabSize="mini"
-        android:layout_margin="10dp"
-        android:elevation="5dp"
-        android:src="@drawable/ic_remider"
-        android:visibility="gone"
-        app:elevation="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/fab_thought"
-        app:layout_constraintLeft_toLeftOf="@+id/fab_thought"
-        app:layout_constraintRight_toRightOf="@+id/fab_thought" />
-</android.support.constraint.ConstraintLayout>
+        android:layout_height="match_parent"
+        android:id="@+id/navHostFragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        app:navGraph="@navigation/nav_graph"
+        app:defaultNavHost="true"/>
+    
+</androidx.constraintlayout.widget.ConstraintLayout>
