@@ -62,9 +62,9 @@ public class Thought implements Serializable {
         this.starred = starred;
     }
 
-    @Override
-    public String toString() {
-        String result = this.getId() + " " + this.getThoughtText() + " " + this.getImgSource();
-        return result;
-    }
+//    @Override
+//    public String toString() {
+//        String result = this.getId() + " " + this.getThoughtText() + " " + this.getImgSource();
+//        return result;
+//    }
 }

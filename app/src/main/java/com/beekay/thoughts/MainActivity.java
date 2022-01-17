@@ -1,9 +1,11 @@
 package com.beekay.thoughts;
 
+import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
+import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_YES;
+
 import android.app.AlarmManager;
 import android.app.Dialog;
 import android.app.PendingIntent;
-import android.app.SearchManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -36,26 +38,26 @@ import com.beekay.thoughts.db.DataOpener;
 import com.beekay.thoughts.model.Thought;
 import com.beekay.thoughts.receivers.ScheduledNotification;
 import com.beekay.thoughts.util.Utilities;
+import com.google.gson.Gson;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
-import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_NO;
-import static android.support.v7.app.AppCompatDelegate.MODE_NIGHT_YES;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -296,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (requestCode == 101) {
             String uri = data.getData().getPath();
             Toast.makeText(this, uri, Toast.LENGTH_LONG).show();
-            importDb(data.getData());
+            importTextFile(data.getData());
         }
     }
 
@@ -437,9 +439,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void exportDb() {
+
         final int BUFFER = 2048;
         try {
-            File download_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            List<Thought> exportableThoughts = utilities.getThoughts();
+            File downloadFolder = this.getExternalCacheDir();
+            Gson gsonObj = new Gson();
+            String someThoughts = gsonObj.toJson(exportableThoughts);
+            System.out.println(someThoughts);
+            File thoughtsTextFile = new File(downloadFolder, "thoughts.txt");
+            thoughtsTextFile.setWritable(true);
+            FileOutputStream tos = new FileOutputStream(thoughtsTextFile);
+            tos.write(someThoughts.getBytes(StandardCharsets.UTF_8));
+            tos.flush();
+            tos.close();
+
+//            File download_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File download_folder = this.getExternalCacheDir();
             File desFile = new File(download_folder.getAbsolutePath() + "//thougts.zip");
             File data = Environment.getDataDirectory();
             File db = new File(data.getAbsolutePath() + "//data//" + getPackageName() + "//databases");
@@ -449,30 +465,29 @@ public class MainActivity extends AppCompatActivity {
             ZipOutputStream zos = new ZipOutputStream(fos);
 
             File[] files = db.listFiles();
-            for (File f : files) {
-                byte[] buf = new byte[BUFFER];
-                FileInputStream fis = new FileInputStream(f);
-                zos.putNextEntry(new ZipEntry(f.getAbsolutePath()));
-                int length;
-                while ((length = fis.read(buf)) > 0) {
-                    zos.write(buf, 0, length);
-                }
-                zos.closeEntry();
-                fis.close();
+            zos.putNextEntry(new ZipEntry("/" + thoughtsTextFile.getName()));
+            FileInputStream fis = new FileInputStream(thoughtsTextFile);
+            int length;
+            byte[] buf = new byte[BUFFER];
+            while ((length = fis.read(buf)) > 0) {
+                zos.write(buf, 0, length);
             }
+            zos.closeEntry();
+            fis.close();
 
             File[] imageList = images.listFiles();
 
-            for (File f : imageList) {
-                byte[] buf = new byte[BUFFER];
-                FileInputStream fis = new FileInputStream(f);
-                zos.putNextEntry(new ZipEntry(f.getAbsolutePath()));
-                int length;
-                while ((length = fis.read(buf)) > 0) {
-                    zos.write(buf, 0, length);
+            if (imageList != null) {
+                for (File f : imageList) {
+                    buf = new byte[BUFFER];
+                    fis = new FileInputStream(f);
+                    zos.putNextEntry(new ZipEntry("/pictures/" + f.getName()));
+                    while ((length = fis.read(buf)) > 0) {
+                        zos.write(buf, 0, length);
+                    }
+                    zos.closeEntry();
+                    fis.close();
                 }
-                zos.closeEntry();
-                fis.close();
             }
 
             zos.close();
@@ -486,33 +501,100 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void importDb(Uri path) {
-        ZipInputStream zis = null;
+    private void importTextFile(Uri path) {
         ContentResolver cr = getContentResolver();
+//        try {
+//            InputStream instream = cr.openInputStream(path);
+//            if (instream != null)
+//            {
+//                InputStreamReader inputreader = new InputStreamReader(instream);
+//                BufferedReader buffreader = new BufferedReader(inputreader);
+//                StringBuffer buffer = new StringBuffer();
+//                String line = "";
+//                try
+//                {
+//                    while ((line = buffreader.readLine()) != null)
+//                        buffer.append(line);
+//                }catch (Exception e)
+//                {
+//                    e.printStackTrace();
+//                }
+//                String json = buffer.toString();
+//                Gson gsonObj = new Gson();
+//                List<Thought> someThoughts = Arrays.asList(gsonObj.fromJson(json, Thought[].class));
+//                System.out.println(someThoughts);
+//            }
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+        boolean pictureFound = false;
+        ZipInputStream zis = null;
+        File imagesDir = new File(this.getFilesDir(), "images");
+        if (!imagesDir.exists()) {
+            imagesDir.mkdirs();
+        }
         try {
             zis = new ZipInputStream(cr.openInputStream(path));
             ZipEntry ze;
             int count;
             byte[] buffer = new byte[2048];
             while ((ze = zis.getNextEntry()) != null) {
-                File f = new File("/", ze.getName());
-                File dir = ze.isDirectory() ? f : f.getParentFile();
-                if (!dir.isDirectory() && !dir.mkdirs()) {
-                    throw new FileNotFoundException("Failed to ensure directory: " + dir.getAbsolutePath());
-                }
-
-                if (ze.isDirectory()) {
-                    continue;
-                }
-
-                FileOutputStream fout = new FileOutputStream(f);
-                try {
-                    while ((count = zis.read(buffer)) != -1) {
-                        fout.write(buffer, 0, count);
+                if (ze.getName().endsWith("thoughts.txt")) {
+                    System.out.println("its thoughts text");
+                    InputStreamReader inputReader = new InputStreamReader(zis);
+                    BufferedReader br = new BufferedReader(inputReader);
+                    String line = "";
+                    StringBuilder sBuffer = new StringBuilder();
+                    try {
+                        while ((line = br.readLine()) != null) {
+                            sBuffer.append(line);
+                        }
+                        String json = sBuffer.toString();
+                        Gson gsonObj = new Gson();
+                        List<Thought> someThoughts = Arrays.asList(gsonObj.fromJson(json, Thought[].class));
+                        System.out.println(someThoughts);
+                        DataOpener db = new DataOpener(MainActivity.this);
+                        db.open();
+                        for (Thought thought : someThoughts) {
+                            db.insert(thought);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                } finally {
-                    fout.close();
+
+                } else if (ze.getName().equals("pictures") && ze.isDirectory()) {
+                    pictureFound = true;
+
+                } else {
+                    File f = new File(imagesDir, ze.getName().split("/")[2]);
+                    FileOutputStream fout = new FileOutputStream(f);
+                    try {
+                        while ((count = zis.read(buffer)) != -1) {
+                            fout.write(buffer, 0, count);
+                        }
+                    } finally {
+                        fout.close();
+                    }
+                    System.out.println(ze.getName());
                 }
+//                File f = new File("/", ze.getName());
+//                File dir = ze.isDirectory() ? f : f.getParentFile();
+//                if (!dir.isDirectory() && !dir.mkdirs()) {
+//                    throw new FileNotFoundException("Failed to ensure directory: " + dir.getAbsolutePath());
+//                }
+//
+//                if (ze.isDirectory()) {
+//                    continue;
+//                }
+//
+//                FileOutputStream fout = new FileOutputStream(f);
+//                try {
+//                    while ((count = zis.read(buffer)) != -1) {
+//                        fout.write(buffer, 0, count);
+//                    }
+//                } finally {
+//                    fout.close();
+//                }
             }
         } catch (FileNotFoundException e) {
             Toast.makeText(MainActivity.this, "Could not import db", Toast.LENGTH_LONG).show();

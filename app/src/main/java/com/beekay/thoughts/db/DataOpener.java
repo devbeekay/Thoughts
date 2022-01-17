@@ -9,6 +9,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v4.graphics.BitmapCompat;
 
+import com.beekay.thoughts.model.Thought;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -158,6 +160,22 @@ public class DataOpener {
         values.put(DONE, 1);
         values.put(DONE, doneValue);
         db.update(RTABLE_NAME, values, "id=?", new String[]{""+id});
+    }
+
+    public long insert(Thought thought) throws  IOException {
+        ContentValues values = new ContentValues();
+        values.put(ID, thought.getId());
+        values.put(THOUGHT_TEXT, thought.getThoughtText());
+        values.put(TIMESTAMP, reverse(thought.getTimestamp()));
+        values.put(IMG, thought.getImg());
+        values.put(IMG_SRC, thought.getImgSource());
+        return db.insertOrThrow(TABLE_NAME, null, values);
+    }
+
+    private String reverse(String tStamp) {
+        String[] timeArray = tStamp.split(" ");
+        String[] dateArray = timeArray[0].split("-");
+        return dateArray[2] + "-" + dateArray[1] + "-" + dateArray[0] + " " + timeArray[1];
     }
 
 
