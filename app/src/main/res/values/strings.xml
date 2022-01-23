@@ -1,11 +1,22 @@
 <resources>
     <string name="app_name">Thoughts</string>
-    <string name="facebook_app_id">256836544917927</string>
-    <string name="fb_login_protocol_scheme">fb256836544917927</string>
-    <array name="context_menu_items">
-        <item>Edit</item>
-        <item>Delete</item>
-        <item>Copy</item>
-    </array>
+    <string name="enter_your_thought_here">Enter your thought here</string>
+    <string name="search">Search</string>
+    <string name="starred_thoughts">Starred Thoughts</string>
+    <string name="reminders">Reminders</string>
+    <string name="thought">Thought</string>
+    <string name="star">Star</string>
+    <string name="import_data">Import Data</string>
+    <string name="picked_image">Picked Image</string>
+    <string name="add_thought">Add Thought</string>
+    <string name="add_reminder">Add Reminder</string>
+    <string name="set">Set</string>
+    <string name="cancel">Cancel</string>
+    <string name="time_to_remind_on">Time to remind on</string>
+    <string name="date_to_remind_on">Date to remind on</string>
+    <string name="remind_about">Remind about</string>
+    <string name="close">close</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="save">Save</string>
 
 </resources>
