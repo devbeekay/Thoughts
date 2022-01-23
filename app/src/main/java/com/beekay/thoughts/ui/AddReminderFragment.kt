@@ -1,11 +1,11 @@
 package com.beekay.thoughts.ui
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.work.Data
@@ -18,7 +18,6 @@ import com.beekay.thoughts.receivers.ShowNotification
 import com.beekay.thoughts.viewmodel.ReminderViewModel
 import com.beekay.thoughts.viewmodel.factory.ReminderViewModelFactory
 import com.google.android.material.snackbar.Snackbar
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -73,6 +72,9 @@ class AddReminderFragment : Fragment() {
             calendar.set(Calendar.HOUR_OF_DAY, hour)
             calendar.set(Calendar.MINUTE, binding.minutes.selectedItemPosition)
             validateAndAddReminder()
+        }
+        binding.dateCancel.setOnClickListener {
+            findNavController().popBackStack()
         }
 
     }
