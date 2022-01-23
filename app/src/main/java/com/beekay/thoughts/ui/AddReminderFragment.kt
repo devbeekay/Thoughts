@@ -19,12 +19,14 @@ import com.beekay.thoughts.viewmodel.ReminderViewModel
 import com.beekay.thoughts.viewmodel.factory.ReminderViewModelFactory
 import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 class AddReminderFragment : Fragment() {
 
-    private val storedSdf = SimpleDateFormat("yyyy-MM-dd HH:mm")
+    private val storedSdf = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")
     private lateinit var binding: FragmentAddReminderBinding
     private val viewModel: ReminderViewModel by viewModels {
         ReminderViewModelFactory(requireContext())
@@ -32,9 +34,10 @@ class AddReminderFragment : Fragment() {
 
     private val calendar: Calendar = Calendar.getInstance()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        // Inflate the layout for this fragment
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         binding = FragmentAddReminderBinding.inflate(inflater)
         return binding.root
     }
@@ -54,16 +57,20 @@ class AddReminderFragment : Fragment() {
             calendar.set(Calendar.MONTH, month)
             calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
         }
-        binding.hours.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, hours)
-        binding.minutes.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, minutes)
-        binding.ms.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, ampm)
+        binding.hours.adapter =
+            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, hours)
+        binding.minutes.adapter =
+            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, minutes)
+        binding.ms.adapter =
+            ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, ampm)
         binding.closeFragment.setOnClickListener {
             findNavController().popBackStack()
         }
 
         binding.dateSet.setOnClickListener {
-            val hour = if ((binding.ms.selectedItem as String) == "PM") binding.hours.selectedItemPosition + 12 else 0
-            calendar.set(Calendar.HOUR, hour)
+            val hour =
+                if ((binding.ms.selectedItem as String) == "PM") binding.hours.selectedItemPosition + 12 else 0
+            calendar.set(Calendar.HOUR_OF_DAY, hour)
             calendar.set(Calendar.MINUTE, binding.minutes.selectedItemPosition)
             validateAndAddReminder()
         }
@@ -71,12 +78,18 @@ class AddReminderFragment : Fragment() {
     }
 
     private fun validateAndAddReminder() {
-        if (binding.remindAbout.text.toString().trim().isNullOrEmpty()) {
-            Snackbar.make(requireView(), "Please enter what to remind about", Snackbar.LENGTH_LONG).show()
-        } else if (calendar.timeInMillis < System.currentTimeMillis()) {
-            Snackbar.make(requireView(), "Time to remind should be in future", Snackbar.LENGTH_LONG).show()
-        } else {
-            addReminder()
+        when {
+            binding.remindAbout.text.toString().trim().isEmpty() -> {
+                Snackbar.make(requireView(), "Please enter what to remind about", Snackbar.LENGTH_LONG)
+                    .show()
+            }
+            calendar.timeInMillis < System.currentTimeMillis() -> {
+                Snackbar.make(requireView(), "Time to remind should be in future", Snackbar.LENGTH_LONG)
+                    .show()
+            }
+            else -> {
+                addReminder()
+            }
         }
 
     }
@@ -84,30 +97,34 @@ class AddReminderFragment : Fragment() {
     private fun addReminder() {
         val remindAbout = binding.remindAbout.text.toString().trim()
         val tag = UUID.randomUUID().toString()
-        println("${System.currentTimeMillis()} system time")
-        println("${calendar.timeInMillis} calendar time")
         val timeToDelay = calendar.timeInMillis - System.currentTimeMillis()
-        println(timeToDelay)
         val request = OneTimeWorkRequestBuilder<ShowNotification>()
-                .setInitialDelay(timeToDelay, TimeUnit.MILLISECONDS)
-                .setInputData(
-                        Data.Builder()
-                                .putString("remindAbout", remindAbout)
-                                .putString("tag", tag)
-                                .build()
-                )
-                .addTag(tag)
-                .build()
+            .setInitialDelay(timeToDelay, TimeUnit.MILLISECONDS)
+            .setInputData(
+                Data.Builder()
+                    .putString("remindAbout", remindAbout)
+                    .putString("tag", tag)
+                    .build()
+            )
+            .addTag(tag)
+            .build()
         WorkManager.getInstance(requireContext())
-                .enqueueUniqueWork(tag, ExistingWorkPolicy.REPLACE, request)
-        val createdOn = storedSdf.format(Date())
-        val remindOn = storedSdf.format(calendar.time)
+            .enqueueUniqueWork(tag, ExistingWorkPolicy.REPLACE, request)
+
+        val createdOn = LocalDateTime.now().format(storedSdf)
+        val remindOn = LocalDateTime.of(
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH) + 1,
+            calendar.get(Calendar.DATE),
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE)
+        ).format(storedSdf)
         val reminder = Reminder(
-                reminderAbout = remindAbout,
-                createdOn = createdOn,
-                toBeDoneOn = remindOn,
-                tag = tag,
-                status = false
+            reminderAbout = remindAbout,
+            createdOn = createdOn,
+            toBeDoneOn = remindOn,
+            tag = tag,
+            status = false
         )
         viewModel.insertThought(reminder)
         findNavController().popBackStack()

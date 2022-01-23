@@ -18,6 +18,9 @@
         <action
             android:id="@+id/action_thoughtsFragment_to_addReminderFragment"
             app:destination="@id/addReminderFragment" />
+        <action
+            android:id="@+id/action_thoughtsFragment_to_describeThoughtFragment"
+            app:destination="@id/describeThoughtFragment"/>
     </fragment>
     <fragment
         android:id="@+id/remindersFragment"
@@ -33,4 +36,8 @@
         android:id="@+id/addReminderFragment"
         android:name="com.beekay.thoughts.ui.AddReminderFragment"
         android:label="AddReminderFragment" />
+    <fragment
+        android:id="@+id/describeThoughtFragment"
+        android:name="com.beekay.thoughts.ui.DescribeThoughtFragment"
+        android:label="DescribeThoughtFragment" />
 </navigation>

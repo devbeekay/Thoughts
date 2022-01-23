@@ -17,9 +17,9 @@ interface ThoughtDAO {
     fun getStarredThoughts(): LiveData<List<Thought>>
 
     @Insert(entity = Thought::class, onConflict = OnConflictStrategy.REPLACE)
-    fun insertThought(thought: Thought)
+    suspend fun insertThought(thought: Thought)
 
     @Delete(entity = Thought::class)
-    fun deleteThought(thought: Thought)
+    suspend fun deleteThought(thought: Thought)
 
 }

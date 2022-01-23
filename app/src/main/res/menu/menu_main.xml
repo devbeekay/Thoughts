@@ -5,39 +5,25 @@
     <item
         android:id="@+id/action_search"
         android:orderInCategory="100"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom"
         android:icon="@drawable/ic_search_teal"
-        android:title="Search"
-        app:actionViewClass="android.widget.SearchView" />
+        android:title="@string/search"
+        app:actionViewClass="com.beekay.thoughts.ui.ExpandEnableSearchView" />
 
     <item
         android:id="@+id/action_starred"
         android:orderInCategory="100"
         app:showAsAction="never"
-        android:title="Starred Thoughts" />
+        android:title="@string/starred_thoughts" />
 
     <item
         android:id="@+id/action_reminders"
         android:orderInCategory="100"
-        android:title="Reminders"/>
+        android:title="@string/reminders"/>
 
-<!--    <item-->
-<!--        android:id="@+id/action_night_mode"-->
-<!--        android:orderInCategory="100"-->
-<!--        app:showAsAction="never"-->
-<!--        android:icon="@drawable/ic_search_teal"-->
-<!--        android:title="Enable Night Mode"/>-->
-
-<!--    <item-->
-<!--        android:id="@+id/exportData"-->
-<!--        android:orderInCategory="100"-->
-<!--        app:showAsAction="never"-->
-<!--        android:title="Export Data"-->
-<!--        />-->
-
-<!--    <item-->
-<!--        android:id="@+id/importData"-->
-<!--        android:orderInCategory="100"-->
-<!--        app:showAsAction="never"-->
-<!--        android:title="Import Data"/>-->
+    <item
+        android:id="@+id/action_import"
+        android:orderInCategory="100"
+        app:showAsAction="never"
+        android:title="@string/import_data"/>
 </menu>
