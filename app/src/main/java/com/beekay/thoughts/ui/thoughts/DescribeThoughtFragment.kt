@@ -1,4 +1,4 @@
-package com.beekay.thoughts.ui
+package com.beekay.thoughts.ui.thoughts
 
 import android.content.Context
 import android.net.Uri

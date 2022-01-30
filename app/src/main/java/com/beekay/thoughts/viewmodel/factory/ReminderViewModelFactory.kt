@@ -13,7 +13,7 @@ import com.beekay.thoughts.viewmodel.ThoughtViewModel
  */
 class ReminderViewModelFactory(private val context: Context): ViewModelProvider.NewInstanceFactory() {
 
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ReminderViewModel(ThoughtDB.getDatabase(context).reminderDAO) as T
     }
 

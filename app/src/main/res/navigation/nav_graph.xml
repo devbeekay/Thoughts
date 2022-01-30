@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/thoughtsFragment">
+    app:startDestination="@id/loginFragment">
 
     <fragment
         android:id="@+id/thoughtsFragment"
-        android:name="com.beekay.thoughts.ui.ThoughtsFragment"
+        android:name="com.beekay.thoughts.ui.thoughts.ThoughtsFragment"
         android:label="ThoughtsFragment" >
         <action
             android:id="@+id/action_thoughtsFragment_to_remindersFragment"
@@ -24,20 +24,39 @@
     </fragment>
     <fragment
         android:id="@+id/remindersFragment"
-        android:name="com.beekay.thoughts.ui.RemindersFragment"
+        android:name="com.beekay.thoughts.ui.reminders.RemindersFragment"
         android:label="fragment_reminders"
         tools:layout="@layout/fragment_reminders" />
     <fragment
         android:id="@+id/addThoughtFragment"
-        android:name="com.beekay.thoughts.ui.AddThoughtFragment"
+        android:name="com.beekay.thoughts.ui.thoughts.AddThoughtFragment"
         android:label="fragment_add_thought"
         tools:layout="@layout/fragment_add_thought" />
     <fragment
         android:id="@+id/addReminderFragment"
-        android:name="com.beekay.thoughts.ui.AddReminderFragment"
+        android:name="com.beekay.thoughts.ui.reminders.AddReminderFragment"
         android:label="AddReminderFragment" />
     <fragment
         android:id="@+id/describeThoughtFragment"
-        android:name="com.beekay.thoughts.ui.DescribeThoughtFragment"
+        android:name="com.beekay.thoughts.ui.thoughts.DescribeThoughtFragment"
         android:label="DescribeThoughtFragment" />
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.beekay.thoughts.ui.auth.LoginFragment"
+        android:label="LoginFragment" >
+        <action
+            android:id="@+id/nav_login_success"
+            app:destination="@id/thoughtsFragment" />
+        <action
+            android:id="@+id/nav_login_signup"
+            app:destination="@id/signUpFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/signUpFragment"
+        android:name="com.beekay.thoughts.ui.auth.SignUpFragment"
+        android:label="SignUpFragment" >
+        <action
+            android:id="@+id/nav_signup_success"
+            app:destination="@id/thoughtsFragment" />
+    </fragment>
 </navigation>

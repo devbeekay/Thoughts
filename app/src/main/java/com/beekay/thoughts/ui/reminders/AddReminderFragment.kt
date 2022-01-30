@@ -1,4 +1,4 @@
-package com.beekay.thoughts.ui
+package com.beekay.thoughts.ui.reminders
 
 import android.os.Bundle
 import android.view.LayoutInflater

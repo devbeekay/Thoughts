@@ -1,4 +1,4 @@
-package com.beekay.thoughts.ui
+package com.beekay.thoughts.ui.thoughts
 
 import android.net.Uri
 import android.os.Bundle
@@ -23,6 +23,7 @@ import com.beekay.thoughts.adapter.ThoughtsContextualCallback
 import com.beekay.thoughts.databinding.FragmentThoughtsBinding
 import com.beekay.thoughts.model.Thought
 import com.beekay.thoughts.model.ThoughtDao
+import com.beekay.thoughts.ui.ExpandEnableSearchView
 import com.beekay.thoughts.util.decryptThought
 import com.beekay.thoughts.util.encryptThought
 import com.beekay.thoughts.viewmodel.ThoughtViewModel

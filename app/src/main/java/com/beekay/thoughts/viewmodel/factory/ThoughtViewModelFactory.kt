@@ -11,7 +11,7 @@ import com.beekay.thoughts.viewmodel.ThoughtViewModel
  */
 class ThoughtViewModelFactory(private val context: Context): ViewModelProvider.NewInstanceFactory() {
 
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ThoughtViewModel(ThoughtDB.getDatabase(context).thoughtDAO) as T
     }
 
