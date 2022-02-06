@@ -27,6 +27,7 @@ class ThoughtsContextualCallback(
         menu?.add("Copy")
         val selectIndicator = viewHolder.itemView.findViewById<LinearLayout>(R.id.selectIndicator)
         selectIndicator.visibility = View.VISIBLE
+        thought.selected = true
         return true
     }
 
@@ -59,6 +60,7 @@ class ThoughtsContextualCallback(
     }
 
     override fun onDestroyActionMode(actionMode: ActionMode?) {
+        thought.selected = false
         val selectIndicator = viewHolder.itemView.findViewById<LinearLayout>(R.id.selectIndicator)
         selectIndicator.visibility = View.GONE
     }

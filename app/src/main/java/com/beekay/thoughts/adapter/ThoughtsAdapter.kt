@@ -45,6 +45,11 @@ class ThoughtsAdapter(
             binding.thought.text = thought.thought
             binding.timestamp.text = thought.createdOn.substringBeforeLast(':')
             binding.star.setImageDrawable(star)
+            if (thought.selected) {
+                binding.selectIndicator.visibility = View.VISIBLE
+            } else {
+                binding.selectIndicator.visibility = View.GONE
+            }
             binding.star.setOnClickListener {
                 clickListener.onClick(thought, ClickType.STAR)
             }
