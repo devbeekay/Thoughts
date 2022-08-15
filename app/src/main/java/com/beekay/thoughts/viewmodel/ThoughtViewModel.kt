@@ -31,6 +31,12 @@ class ThoughtViewModel(private val thoughtDAO: ThoughtDAO) : ViewModel() {
         }
     }
 
+    fun updateStarred(starred: Boolean, id: Long) {
+        viewModelScope.launch {
+            thoughtDAO.updateStarred(starred, id)
+        }
+    }
+
     fun deleteThought(thought: Thought) {
         viewModelScope.launch {
             thoughtDAO.deleteThought(thought)

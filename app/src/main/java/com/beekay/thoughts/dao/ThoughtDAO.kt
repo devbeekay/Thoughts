@@ -19,6 +19,9 @@ interface ThoughtDAO {
     @Insert(entity = Thought::class, onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertThought(thought: Thought)
 
+    @Query("UPDATE thought set starred=:starred WHERE tid=:id")
+    suspend fun updateStarred(starred: Boolean, id: Long)
+
     @Delete(entity = Thought::class)
     suspend fun deleteThought(thought: Thought)
 

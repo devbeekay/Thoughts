@@ -89,11 +89,13 @@ class ThoughtsFragment : androidx.fragment.app.Fragment(), ClickListener<Thought
 
         binding.thoughts.layoutManager = LinearLayoutManager(requireContext())
         adapter = ThoughtsAdapter(requireContext(), this)
-        viewModel.thoughts.observe(requireActivity(), {
-            val t = it.map { thought -> thought.copy(thought = decryptThought(thought.thought)) }
+        viewModel.thoughts.observe(requireActivity()) {
+            val t =
+                it.map { thought -> thought.copy(thought = decryptThought(thought.thought)) }
+
             thoughts = t
             adapter.setThoughts(t)
-        })
+        }
 
         binding.thoughts.adapter = adapter
         binding.addThought.setOnClickListener {
@@ -166,8 +168,7 @@ class ThoughtsFragment : androidx.fragment.app.Fragment(), ClickListener<Thought
 
     override fun onClick(entity: Thought, type: ClickType) {
         if (type == ClickType.STAR) {
-            entity.starred = !entity.starred
-            viewModel.insertThought(entity)
+            viewModel.updateStarred(!entity.starred, entity.id)
         } else if (type == ClickType.THOUGHT) {
             viewModel.selectedThought.postValue(entity)
             findNavController().navigate(R.id.action_thoughtsFragment_to_describeThoughtFragment)
