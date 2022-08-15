@@ -37,6 +37,5 @@ fun decryptThought(encryptedThought: String) =
         val decodedBytes = cipher.doFinal(encryptedBytes)
         String(decodedBytes)
     } catch (ex: Exception) {
-            encryptedThought
-
+        String(Base64.decode(encryptedThought, 0))
     }

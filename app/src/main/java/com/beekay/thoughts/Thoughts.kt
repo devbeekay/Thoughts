@@ -12,13 +12,16 @@ private const val THOUGHTS_ALIAS = "Thoughts_alias"
 
 class Thoughts : Application() {
     override fun onCreate() {
+        println("Came to application")
         super.onCreate()
+        println("AM I called?")
         checkAndCreateKey()
     }
 
     private fun checkAndCreateKey() {
         val keystore = KeyStore.getInstance(KEY_STORE)
         keystore.load(null)
+        println("Does ")
         if (!keystore.containsAlias(THOUGHTS_ALIAS)) {
             generateKey()
         }

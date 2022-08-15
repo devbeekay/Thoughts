@@ -2,6 +2,7 @@ package com.beekay.thoughts.ui.thoughts
 
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.*
 import androidx.activity.result.ActivityResultLauncher
@@ -37,6 +38,7 @@ import java.io.InputStreamReader
 import java.util.concurrent.Executor
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 
 
 /**
@@ -218,6 +220,19 @@ class ThoughtsFragment : androidx.fragment.app.Fragment(), ClickListener<Thought
         )
 
         super.onResume()
+    }
+
+    private fun exportThoughts() {
+        val buffer = ByteArray(2048)
+        try {
+            val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val desFile = File(downloads, "thoughts.zip")
+            val fos = FileOutputStream(desFile)
+            val zos = ZipOutputStream(fos)
+
+        } catch(ex: Exception) {
+
+        }
     }
 
     private fun importThoughts(path: Uri) {
